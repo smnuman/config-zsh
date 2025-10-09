@@ -1,0 +1,39 @@
+#compdef gsub grepo gsync gsync-push gsync-pull gsync-all gunsub
+
+_arguments -s \
+  '1: :->cmds' \
+  '*:: :->args'
+
+case $state in
+  cmds)
+    _values 'Git utilities' \
+      'gsub[Add submodule]' \
+      'grepo[Create GitHub repo and push]' \
+      'gsync[Full fetch + push]' \
+      'gsync-push[Push submodule and parent]' \
+      'gsync-pull[Pull submodule and parent]' \
+      'gsync-all[Push all submodules and parent]' \
+      'gunsub[Remove submodule]'
+    ;;
+  args)
+    case $words[1] in
+      gsub)
+        _arguments \
+          '1:Submodule folder:_files -/' \
+          '2:Commit message' \
+          '3:Repo name'
+        ;;
+      grepo)
+        _arguments \
+          '1:Repo name (optional)' \
+          '2:Commit message'
+        ;;
+      gsync-all|gsync-push)
+        _arguments '1:Commit message'
+        ;;
+      gunsub)
+        _arguments '1:Submodule folder:_files -/'
+        ;;
+    esac
+    ;;
+esac

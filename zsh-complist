@@ -1,0 +1,33 @@
+#!/usr/bin/env zsh
+# completion list keybindings and settings
+# ~/.config/zsh/zsh-complist
+# --- History Search Keybindings ---
+autoload -U up-line-or-beginning-search
+autoload -U down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search        # Ctrl+P: search history backward (up)
+bindkey '^[[B' down-line-or-beginning-search      # Ctrl+N: search history forward (down)
+# bindkey '^P' up-line-or-beginning-search        # Ctrl+P: search history backward (up)
+# bindkey '^N' down-line-or-beginning-search      # Ctrl+N: search history forward (down)
+
+# --- Completion Menu Configuration ---
+zmodload -i zsh/complist                        # Load completion list module quietly
+zstyle ':completion:*' menu select              # Enable interactive menu completion
+_comp_options+=(globdots)                       # Include dotfiles in completions
+
+# Completion menu navigation with arrow keys (no conflict with Ctrl+P/N)
+bindkey '^[[A' up-line-or-history               # Up arrow: previous history or menu item
+bindkey '^[[B' down-line-or-history             # Down arrow: next history or menu item
+
+# Optional: use Ctrl-J / Ctrl-K for menu navigation as alternatives to arrows
+bindkey '^J' menu-select-down                   # Ctrl+J: next menu item
+bindkey '^K' menu-select-up                     # Ctrl+K: previous menu item
+
+# Use the up and down keys to navigate the history
+bindkey '\e[A' history-substring-search-up
+bindkey '\e[B' history-substring-search-down
+# Use Ctrl+R to search history
+bindkey '^R' history-incremental-search-backward
+# Use Ctrl+S to search history forward (if terminal supports it)
+bindkey '^S' history-incremental-search-forward

@@ -1,0 +1,93 @@
+#!/usr/bin/env zsh
+# File: $ZDOTDIR/zsh/zsh-vim-mode
+# Description: Enable Vim keybindings and dynamic cursor shapes in Zsh, with terminal-specific support
+
+# Load zsh/complist for menuselect keymap
+autoload -Uz compinit && compinit
+zmodload zsh/complist
+
+# Enable Vim mode with minimal key timeout
+bindkey -v
+export KEYTIMEOUT=1
+
+# Vim-style navigation in completion menu
+bindkey -M menuselect '^h' vi-backward-char
+bindkey -M menuselect '^l' vi-forward-char
+bindkey -M menuselect '^k' vi-up-line-or-history
+bindkey -M menuselect '^j' vi-down-line-or-history
+bindkey -M menuselect '^d' vi-delete-char
+bindkey -M menuselect '^y' vi-yank
+
+bindkey -M main '^k' history-beginning-search-backward
+bindkey -M main '^j' history-beginning-search-forward
+
+# Ensure backspace works in Vim mode
+bindkey -v '^?' backward-delete-char
+
+# -- Cursor shape handlers --
+
+# Terminal-specific cursor shapes
+function set-cursor-shape {
+  local shape=$1
+  if [[ -n $TMUX ]]; then
+    # tmux-specific cursor shapes
+    case $shape in
+      beam)             print -n -- '\ePtmux;\e\E[4 q\e\\';;
+      block)            print -n -- '\ePtmux;\e\E[1 q\e\\';;
+      blinking-beam)    print -n -- '\ePtmux;\e\E[3 q\e\\';;
+      blinking-block)   print -n -- '\ePtmux;\e\E[2 q\e\\';;
+      default)          print -n -- '\ePtmux;\e\E[2 q\e\\';;
+    esac
+  elif [[ $TERM == "iterm"* || $TERM == "xterm"* || $TERM == "vte"* || $TERM == "alacritty" ]]; then
+    # iTerm2, xterm, VTE-based (GNOME Terminal), Alacritty
+    case $shape in
+      beam)             print -n -- '\e[5 q';;
+      block)            print -n -- '\e[1 q';;
+      blinking-beam)    print -n -- '\e[3 q';;
+      blinking-block)   print -n -- '\e[2 q';;
+      default)          print -n -- '\e[2 q';;
+    esac
+  else
+    # Fallback for unknown terminals
+    case $shape in
+      beam)             print -n -- '\e[5 q';;
+      block)            print -n -- '\e[1 q';;
+      blinking-beam)    print -n -- '\e[3 q';;
+      blinking-block)   print -n -- '\e[2 q';;
+      default)          print -n -- '\e[2 q';;
+    esac
+  fi
+}
+
+# Change cursor shape based on Vim mode
+function zle-keymap-select {
+  case $KEYMAP in
+    vicmd)      set-cursor-shape block;;  # Block cursor for command mode
+    viins|main) set-cursor-shape beam;;   # Beam cursor for insert mode
+  esac
+}
+zle -N zle-keymap-select
+
+# Initialize cursor shape and keymap
+function zle-line-init {
+  zle -K viins  # Start in insert mode
+  set-cursor-shape beam
+}
+zle -N zle-line-init
+
+# Reset cursor to beam before each prompt
+function zsh-vim-mode-precmd {
+  set-cursor-shape blinking-beam
+}
+add-zsh-hook precmd zsh-vim-mode-precmd
+
+# Set initial cursor shape
+set-cursor-shape beam
+
+# Cleanup cursor on exit
+function zsh-vim-mode-cleanup {
+  set-cursor-shape default
+}
+add-zsh-hook zshexit zsh-vim-mode-cleanup
+
+# -- Cursor shape handler end --

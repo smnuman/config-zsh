@@ -1,0 +1,44 @@
+#!/usr/bin/env zsh
+
+# Usage e.g.:
+# brew_log_summary              # --- Current month
+# brew_log_summary 2025-06      # --- June 2025
+brew_log_summary() {
+    local logdir="$BREWDOTS/logs"
+    local month="${1:-$(date +%Y-%m)}"
+    local file="$logdir/brew-activity-${month}.log"
+
+    [[ ! -f "$file" ]] && echo "⚠️ No log found for $month" && return
+
+    echo "📅 Summary for $month:"
+    echo "───────────────────────────────"
+    grep -E 'brew (install|uninstall|upgrade|reinstall|tap|untap)' "$file" \
+        | awk '{print $2, $3, $4, $5}' \
+        | sort | uniq -c | sort -nr
+}
+
+# clear_brew_logs() {
+#     : > "$BREWDOTS/logs/brew-activity.log" && echo "✅ Cleared brew logs."
+# }
+clear_brew_logs() {
+    local ts=$(date +%Y-%m-%d_%H-%M-%S)
+    local log="$BREWDOTS/logs/brew-activity.log"
+    [[ -f $log ]] && cp "$log" "$log.backup-$ts"
+    : > "$log"
+    echo "📦 Archived and cleared brew logs ($ts)"
+}
+
+ls_with_git() {
+  for item in *; do
+    if [ -d "$item" ]; then
+      if [ -d "$item/.git" ]; then
+        echo -e "📂 $item \e[32m(git repo)\e[0m"
+        git -C "$item" status --short
+      else
+        echo "📁 $item"
+      fi
+    else
+      echo "📄 $item"
+    fi
+  done
+}

@@ -1,0 +1,11 @@
+PROMPT_UTILS="$ZDOTDIR/prompt/prompt-utils.zsh"
+PROMPT_INIT="$ZDOTDIR/prompt/prompt-init.zsh"
+PROMPT_GIT="$ZDOTDIR/prompt/prompt-git-status.zsh"
+
+if [[ -f $PROMPT_UTILS && -f $PROMPT_INIT && -f $PROMPT_GIT ]]; then
+    source $PROMPT_UTILS
+    source $PROMPT_GIT
+    source $PROMPT_INIT
+else
+    export PS1="[ %T ] %~ %# "
+fi

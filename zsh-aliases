@@ -1,0 +1,74 @@
+#!/usr/bin/env zsh
+# ======================= Some extra aliase =======================
+#
+# Add your custom aliases below -- need to remove/relocate later to zsh-aliases
+alias ll='ls -l'        # List all files in long format with the current and parent directories
+alias lla='ls -al'      # List all files including hidden ones but the current and parent
+alias la='ls -a'        # List all files including hidden ones
+alias l='ls'            # List files in a short yet multi-column format
+alias l.='ls -A'        # List all files in short format without human-readable sizes
+alias 'll.'='ls -lAG'   # List all files in long format with human-readable sizes
+alias lt='ls -lt'       # List files sorted by modification time, newest first
+# alias .='echo $PWD'     # Display the working directory (disabled - conflicts with source builtin)
+alias lt='ls -alrt'     # List all files sorted by modification time, oldest first
+alias lS='ls -lS'       # List files sorted by size, largest first
+alias lc='ls -l | wc -l' # Count files in current directory (including . and ..)
+
+alias eza='eza -alo --total-size --group-directories-first --git --colour=never'
+alias ezat='eza -T --git-ignore'
+
+alias lo="logout"       # logout from current shell session
+# alias 't~'="tree -a -L 3 --dirsfirst -I 'Documents|Downloads|Applications|Music|Movies|Pictures|Library|raycast|.git|plugins|logs'"
+alias 't~'='() { tree -a -L "${1:-3}" --dirsfirst -I "Documents|Downloads|Applications|Music|Movies|Pictures|Library|raycast|.git|plugins|logs" "${2:-.}"; }'
+# ---
+alias c='clear'         # Clear the terminal screen
+alias s='source ~/.config/zsh/.zshrc'    # source .zshrc
+alias which='type -a'    # Show all locations of a command
+
+# Return to previous folder/directory
+alias -- -='cd -'
+# ---
+alias zlog='tail -n 20 ~/.config/zsh/logs/plugin-update.log'
+alias brewlog='tail -n 20 "$BREWDOTS/logs/brew-activity.log"'
+alias brewlogall='more "$BREWDOTS/logs/brew-activity.log"'
+# Quick open PATH Legend
+alias path-legend="code ~/.config/docs/PATH-legend.md"
+# ---
+alias gs='read BEHIND AHEAD <<< "$(git rev-list --left-right --count @{u}...HEAD 2>/dev/null || echo "0 0")"; echo "📊 Ahead: $AHEAD, Behind: $BEHIND"'
+# alias gsync='git fetch --all && gsync-status'
+# alias gsync-pull='git fetch --all && git pull --rebase'
+# alias gsync-push='git fetch --all && git push'
+# alias grepo='f() { git init && git remote add origin "git@github.com:smnuman/$(basename $PWD).git" && git add . && git commit -m "${1:-Initial commit}" && git push -u origin master; }; f'
+# ---
+alias path='echo ${PATH//:/\\n}'
+# alias path='echo "$PATH" | tr ":" "\n"'
+# =================== extra aliases end here ======================
+#
+[[ -f $BREWDOTS/brewx ]] && alias brew="$BREWDOTS/brewx"
+
+# ======================= History aliases ==============================
+alias h='history -10'                     # Show last 10 history entries
+alias h50='history -50'                   # Show last 50 history entries
+alias h100='history -100'                 # Show last 100 history entries
+alias h200='history -200'                 # Show last 200 history entries
+alias ha='history -a'                     # Append history to file immediately
+alias hs='history -s'                     # Search history interactively
+alias hc='history -c'                     # Clear history for current session
+alias htime='fc -lt "%F %T"'              # Show history with timestamps
+alias hgrep='history 1 | grep'            # Grep through full history
+# alias htop='history 1 | sort -nr | head'  # Show most recent commands
+alias hg='history|grep '                  # Search history for a specific term
+
+alias cat='bat --paging=never'            # Use bat instead of cat
+alias mdcd='function _mkcd(){ mkdir -p "$1" && cd "$1"; }; _mkcd'
+# https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html#comment-21984
+alias ps2=’ps -ef | grep -v $$ | grep -i ‘  # Search for processes excluding the current one: I always create a ps2 command that I can easily pass a string to and look for it in the process table. I even have it remove the grep of the current line.
+alias del='rm -I –preserve_root'        # Interactive delete with confirmation: I alias rm to rm -i but sometimes I want a more interactive prompt. So I created a del command that uses rm -I which prompts once if you are deleting more than three files or recursively.
+
+# ======================= NETWORK management functions =======================
+alias usage='ifconfig wlan0 | grep 'bytes''
+alias connections='sudo lsof -n -P -i +c 15'
+alias ports='sudo lsof -i -P | grep LISTEN'
+alias myip='curl ifconfig.me && echo'  # Get public IP address
+alias localip="ipconfig getifaddr en0" # Get local IP address (macOS)
+alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder; echo "DNS cache flushed."' # Flush DNS cache (macOS)

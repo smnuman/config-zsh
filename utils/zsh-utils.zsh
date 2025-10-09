@@ -1,0 +1,155 @@
+
+# --- some helping functions ---
+
+# Helper: Usage message for zshlog
+zshlog_usage() {
+    echo "⚠️  Usage: zshlog [--help|-h|-d|--file|-f|-n|-t|-s|--verbose|-v|--quiet|-q] <message>"
+    echo "    --info        Log level INFO (default)"
+    echo "    --warn        Log level WARN"
+    echo "    --error       Log level ERROR"
+    echo "    --debug       Log level DEBUG (only if ZSH_DEBUG=true)"
+    echo "    --log|--_|-l  Log level LOG (generic)"
+    echo "    --file|-f     Specify a log file name (default: zsh.zlog in log directory)"
+    echo "    -d            Specify a log directory name (default: ~/.config/zsh/logs)"
+    echo "    -n            Add a newline before & after message"
+    echo "    -t            Add a tab before message"
+    echo "    -s            Skip logging (print only)"
+    echo "    --verbose|-v  Force verbosity ON (echo)"
+    echo "    --quiet|-q    Force verbosity OFF (quiet mode logging)"
+}
+
+zshlog() {
+    [[ $# -eq 0 ]] && { zshlog_usage; return; }
+    local opt_echo="" opt_skiplog=false tab="" nl=""
+
+    # Parse options
+    while [[ "$1" == -* ]]; do
+        case "$1" in
+            --info)     loglevel="info";    shift ;;
+            --warn)     loglevel="warn";    shift ;;
+            --error)    loglevel="error";   shift ;;
+            --debug)    loglevel="debug";   shift ;;
+            --log|--_)  loglevel="log";     shift ;;
+            -l) shift;  loglevel="${1:l}";  shift ;;   # lowercase input
+            -f) shift;  logfile_name="$1";  shift ;;
+            -d) shift;  logdir_name="$1";   shift ;;
+            -v|--verbose)   opt_echo=true;  shift ;;
+            -q|--quiet)     opt_echo=false; shift ;;
+            -s)         opt_skiplog=true;   shift ;;
+            -n)         nl="\n";            shift ;;
+            -t)         tab="\t";           shift ;;
+            -h|--help)  zshlog_usage; return 0 ;;
+            *) echo "Invalid option: $1" >&2; zshlog_usage; return 1 ;;
+        esac
+    done
+
+    # while [[ "$1" == -* ]]; do
+    # #     case "$1" in
+    # #         --help)     set -- -h "${@:2}" ;;
+    # #         --file)     set -- -f "$2" "${@:3}" ;;
+    # #         --verbose)  set -- -v "${@:2}" ;;
+    # #         --quiet)    set -- -q "${@:2}" ;;
+    # #         --info)     loglevel="info"; shift ;;
+    # #         --warn)     loglevel="warn"; shift ;;
+    # #         --error)    loglevel="error"; shift ;;
+    # #         --debug)    loglevel="debug"; shift ;;
+    # #         --_)        loglevel="log"; shift ;;
+    # #     esac
+    # #     case "$1" in
+    # #         -h)
+    # #             zshlog_usage
+    # #             return 0
+    # #             ;;                    # Help message
+    # #         -d) shift
+    # #             logdir_name="$1"
+    # #             ;;                    # Add log directory name
+    # #         -f)
+    # #             shift
+    # #             logfile_name="$1"
+    # #             ;;                    # Add log file name
+    # #         -l) shift
+    # #             loglevel="${1:l}" ;;   # lowercase input
+    # #         -v) opt_echo=true ;;      # force verbosity on
+    # #         -q) opt_echo=false ;;     # quiet mode logging
+    # #         -s) opt_skiplog=true ;;   # skip logging
+    # #         -n) nl="\n" ;;            # add a newline before the message
+    # #         -t) tab="\t" ;;           # add a tab before the message
+    # #     esac
+    #     shift
+    # done
+
+    local loglevel="${loglevel:-info}"
+
+    [[ "$loglevel" == "debug" && "$ZSH_DEBUG" != "true" ]] && return
+
+    local leveltag=""
+    case "$loglevel" in
+        info)  leveltag="%F{cyan}[INFO]%f" ;;
+        warn)  leveltag="%F{yellow}[WARNING]%f" ;;
+        error) leveltag="%F{red}[ERROR]%f" ;;
+        debug) leveltag="%F{magenta}[DEBUG]%f" ;;
+        *)     leveltag="%F{green}[LOG]%f" ;;
+    esac
+
+    local msg="$*"          # plain_msg
+    local logdir="${logdir_name:-${ZLOGDLOCAL:-${ZLOGDIR:-${ZDOTDIR:-$HOME/.config/zsh}/logs}}}" logfile
+    if [[ "$logfile_name" == /* ]]; then
+        logfile="$logfile_name"
+    else
+        logfile="$logdir/${logfile_name:-${LOGFILE:-zsh.zlog}}"
+    fi
+
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    local caller="📦 <\e[0;33m${funcstack[2]:-main}\e[0m>"    # a yellow caller!
+    mkdir -p "$logdir"
+
+    [[ "$opt_skiplog" == false ]] && \
+        echo "\"$timestamp\",\"$loglevel\",\"$(clean "$caller")\",\"$(clean "$msg")\"" >> "$logfile"
+
+    local verbosity="$opt_echo"
+    [[ "$verbosity" == "true" || ( -z "$verbosity" && "$ZSHF_VERBOSE" == "true" ) ]] && \
+        print -P -- "$nl$tab$leveltag $caller said:: $tab$msg"
+}
+
+# One-liner: Strip ANSI colour codes like \e[31m, \e[0;33m, etc.
+clean() { echo "$1" | sed -E 's/\x1B\[[0-9;]*m//g' | sed -E 's/%F\{[^}]*\}//g; s/%K\{[^}]*\}//g; s/%f//g; s/%k//g' | perl -CSDA -pe 's/[\x{1F300}-\x{1FAFF}\x{2600}-\x{26FF}]//gu'; }
+
+# # Full-step multiline: Strip ANSI escape codes, Zsh prompt formatting, and emoji
+# clean() {
+#     echo "$1" | \
+#         # Remove ANSI escape codes
+#         sed -E 's/\x1B\[[0-9;]*m//g' | \
+#         # Remove Zsh prompt formatting: %F{color}, %K{color}, %f, %k
+#         sed -E 's/%F\{[^}]*\}//g; s/%K\{[^}]*\}//g; s/%f//g; s/%k//g' | \
+#         # Remove emoji (unicode ranges)
+#         perl -CSDA -pe 's/[\x{1F300}-\x{1FAFF}\x{2600}-\x{26FF}]//gu'
+# }
+
+zshenv_report() {
+    local logfile="${ZLOGDIR:-$HOME/.config/zsh/logs}/zshenv_report.log"
+    mkdir -p "${logfile:h}"   # ensure log dir exists
+
+    {
+        echo "=== Zsh Environment Report ==="
+        echo "Generated: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo
+        echo "LANG=$LANG"
+        echo "LC_ALL=$LC_ALL"
+        echo "ZDOTDIR=$ZDOTDIR"
+        echo "ZLOGDIR=$ZLOGDIR"
+        echo "ZLOGFILE=$ZLOGFILE"
+        echo "BREWDOTS=$BREWDOTS"
+        echo "BREWLOGS=$BREWLOGS"
+        echo "BRUTILS=$BRUTILS"
+        echo "ZUTILS=$ZUTILS"
+        echo "BAT_CONFIG_DIR=$BAT_CONFIG_DIR"
+        echo "EDITOR=$EDITOR"
+        echo "VISUAL=$VISUAL"
+        echo "ZSHENV_DEBUG=$ZSHENV_DEBUG"
+        echo "ZSHF_VERBOSE=$ZSHF_VERBOSE"
+        echo
+        echo "PATH=$PATH"
+        echo "==================================="
+    } >| "$logfile"
+    cat "$logfile"
+}

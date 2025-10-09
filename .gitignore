@@ -1,15 +1,7 @@
-# -- force NOT to ignore --
-!/plugins/.gitkeep
-! */.gitkeep
-
 # -- folders to ignore/exclude --
 plugins/
 save/
 logs/
-raycast/
-gh/
-htop/
-bat/
 .zsh_sessions/
 
 # -- files to ignore --
@@ -20,5 +12,8 @@ bat/
 *.timestamp
 *.zip
 .brew_env
-*
+.DS_Store
+
+# -- force NOT to ignore --
 !.gitignore
+!/plugins/.gitkeep

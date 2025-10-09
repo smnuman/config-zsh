@@ -1,0 +1,25 @@
+#!/usr/bin/env zsh
+# Setup the basic environment
+export TERM="xterm-256color"    # Use 256 colors in terminal
+export EDITOR="vim"             # Set default editor to Neovim
+export VISUAL="$EDITOR"         # Set visual editor to Neovim
+export BAT_THEME='gruvbox-dark' # Set bat theme to gruvbox-dark
+
+export CLICOLOR=1
+export LSCOLORS=GxFxCxDxBxegedabagaced
+export GREP_OPTIONS='--color=auto'
+export K_SHOW_GIT=1             # for 'k' to work with git status
+
+# For compilers to find curl you may need to set:
+export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
+
+export HOMEBREW_INSTALL_BADGE="☕️ 🐸"
+export HOMEBREW_INSTALL_BADGE_COLOR="green"
+
+export ZSH_HISTORY_SEARCH_STYLE="bashlike"  # Cursor at end (default), or use "zshlike"
+
+export_path "$BREWDOTS"
+export_path "$ZUTILS"
+export_path "$BRUTILS"
+export_path "$HOME/.config/zsh/git-utils"
