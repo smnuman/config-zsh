@@ -1,0 +1,108 @@
+#!/usr/bin/env zsh
+# ===============================================================
+# 🧭 Nomad File-Manager Suite for macOS/Linux (by Numan Syed)
+# Auto-selects lf / nnn / yazi based on environment,
+# creates minimal config scaffolds, and sets preview helpers.
+# ===============================================================
+
+# --- 1️⃣ Environment Preference ---------------------------------
+FM_REMOTE="lf"
+FM_LOCAL="nnn"
+FM_GUI="yazi"
+FM_FALLBACK="lf"
+
+# --- 2️⃣ Helper Functions ---------------------------------------
+is_remote()  { [[ -n "$SSH_CONNECTION" ]]; }
+is_gui_term() {
+  [[ -n "$TERM_PROGRAM" && "$TERM_PROGRAM" =~ (iTerm|Apple_Terminal|Warp|WezTerm|Kitty) ]] ||
+  [[ -n "$DISPLAY" || -n "$WAYLAND_DISPLAY" ]]
+}
+
+find_fm() {
+  for cmd in "$@"; do
+    command -v "$cmd" >/dev/null 2>&1 && { echo "$cmd"; return 0; }
+  done
+  return 1
+}
+
+choose_filemanager() {
+  local chosen
+  if is_remote; then
+    chosen=$(find_fm "$FM_REMOTE" "$FM_FALLBACK")
+  elif is_gui_term; then
+    chosen=$(find_fm "$FM_GUI" "$FM_LOCAL" "$FM_FALLBACK")
+  else
+    chosen=$(find_fm "$FM_LOCAL" "$FM_FALLBACK")
+  fi
+  echo "${chosen:-$FM_FALLBACK}"
+}
+
+# --- 3️⃣ Config Bootstrap ----------------------------------------
+setup_fm_configs() {
+  local confdir="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+  # lf ------------------------------------------------------------
+  if [[ ! -f "$confdir/lf/lfrc" ]]; then
+    mkdir -p "$confdir/lf"
+    cat <<'EOF' > "$confdir/lf/lfrc"
+# --- lf config ---
+set hidden
+set icons
+set previewer ~/.config/lf/preview.sh
+map <enter> open
+map <C-o> shell open .
+EOF
+
+    cat <<'EOF' > "$confdir/lf/preview.sh"
+#!/usr/bin/env bash
+# Simple file preview for lf
+case "$1" in
+  *.tar|*.gz|*.zip|*.rar) tar tvf "$1" 2>/dev/null || unzip -l "$1" ;;
+  *.jpg|*.png|*.gif|*.webp) chafa "$1" --format=symbols ;;
+  *) bat --style=plain --color=always "$1" 2>/dev/null || head "$1" ;;
+esac
+EOF
+    chmod +x "$confdir/lf/preview.sh"
+  fi
+
+  # nnn -----------------------------------------------------------
+  if [[ ! -f "$confdir/nnn/plugins/.nomad_init" ]]; then
+    mkdir -p "$confdir/nnn/plugins"
+    echo '# marker' > "$confdir/nnn/plugins/.nomad_init"
+  fi
+
+  # yazi ----------------------------------------------------------
+  if [[ ! -f "$confdir/yazi/yazi.toml" ]]; then
+    mkdir -p "$confdir/yazi"
+    cat <<'EOF' > "$confdir/yazi/yazi.toml"
+[manager]
+show_hidden = true
+sort_dir_first = true
+[preview]
+max_width = 120
+max_height = 60
+EOF
+  fi
+}
+
+# --- 4️⃣ Main Execution ------------------------------------------
+main() {
+  local fm
+  fm=$(choose_filemanager)
+  if [[ -z "$fm" ]]; then
+    echo "⚠️  No suitable file manager found!"
+    exit 1
+  fi
+
+  setup_fm_configs
+
+  for dep in bat chafa; do
+    command -v "$dep" >/dev/null 2>&1 || echo "ℹ️  Hint: install $dep for better previews."
+  done
+
+  echo "📁 Launching: $fm"
+  exec "$fm" "$@"
+}
+
+main "$@"
+# ===============================================================

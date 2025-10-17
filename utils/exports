@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+# ~/.config/zsh/utils/zexport
+# local pattern="${1:-.*}"  # default: match everything
+# echo "🔍 Searching for exports matching '$pattern'"
+# export -p | grep --color=never "^export $pattern" || echo "\t⚠️  None found matching '$pattern' ⚠️"
+
+# Super compact version:
+local p="${1:-*}"; local r="${p//\*/.*}"; echo "🔍 Searching for exports matching '$p'"; export -p | grep --color=never -E "^export ${r}" || echo "\t⚠️  None found matching '$p' ⚠️"

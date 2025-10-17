@@ -1,21 +1,47 @@
-# Source it with my plugin manager, from ~/.zshrc
-bindkey -e  # Emacs keybindings for sane defaults
+# ===============================
+#  🧭 Zsh Keybinds Configuration
+#  Source: ~/.config/zsh/lib/keybinds.zsh
+# ===============================
 
-# Fix Backspace + Delete
-bindkey '^?' backward-delete-char         # Backspace (ASCII DEL)
-bindkey '^H' backward-delete-char         # Sometimes Backspace is CTRL-H
-bindkey '^[[3~' delete-char               # Forward Delete (Del key)
+# --- 1️⃣ Base Mode ---
+bindkey -e                               # Emacs keybindings for sane defaults
+# --- classic Emacs bindings ---
+bindkey '^T' transpose-chars             # Swap last two characters
+bindkey '^K' kill-line                   # Delete from cursor to end of line
+bindkey '^Y' yank                        # Paste last killed text
 
-# Word + Line deletion (Option+Backspace / Command+Backspace)
-bindkey '^W' backward-kill-word           # Normal CTRL-W
-bindkey '^U' kill-whole-line              # Normal CTRL-U
+# --- 2️⃣ Basic Editing ---
+bindkey '^?' backward-delete-char        # Backspace (ASCII DEL)
+bindkey '^H' backward-delete-char        # Sometimes Backspace is CTRL-H
+bindkey '^[[3~' delete-char              # Forward Delete (Fn+Delete or Del key or Ctrl+D)
+bindkey '^D' delete-char                 # Ctrl+D (alternative forward delete)
 
-# macOS/iTerm sends ESC + DEL sometimes for Option+Backspace
-bindkey '^[^H' backward-kill-word         # ESC + CTRL-H
-bindkey '^[^?' backward-kill-word         # ESC + DEL
+# --- 3️⃣ Word & Line Deletion ---
+bindkey '^W' backward-kill-word          # CTRL-W: delete previous word
+bindkey '^U' kill-whole-line             # CTRL-U: delete entire line
+bindkey '^[^H' backward-kill-word        # ESC + CTRL-H (macOS Option+Backspace)
+bindkey '^[^?' backward-kill-word        # ESC + DEL (macOS Option+Backspace)
 
-# Arrow keys
-bindkey '^[[A' up-line-or-search
-bindkey '^[[B' down-line-or-search
-bindkey '^[[C' forward-char
-bindkey '^[[D' backward-char
+# --- 4️⃣ Navigation ---
+bindkey '^[[A' up-line-or-search         # ↑ arrow: search through history
+bindkey '^[[B' down-line-or-search       # ↓ arrow: same, forward
+bindkey '^[[C' forward-char              # → arrow: forward char
+bindkey '^[[D' backward-char             # ← arrow: backward char
+
+# --- 5️⃣ History Search (optional enhancement) ---
+autoload -Uz up-line-or-beginning-search
+autoload -Uz down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^P' up-line-or-beginning-search  # Ctrl+P for previous matching command
+bindkey '^N' down-line-or-beginning-search # Ctrl+N for next matching command
+
+# --- 6️⃣ Quick Cursor Movement (optional) ---
+bindkey '^[f' forward-word               # Alt+F → forward one word
+bindkey '^[b' backward-word              # Alt+B → backward one word
+bindkey '^A' beginning-of-line           # Ctrl+A → go to start of line
+bindkey '^E' end-of-line                 # Ctrl+E → go to end of line
+
+# --- 7️⃣ Clear & Misc ---
+bindkey '^L' clear-screen                # Ctrl+L → clear terminal
+bindkey '^R' history-incremental-search-backward  # Ctrl+R → reverse search

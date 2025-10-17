@@ -21,7 +21,7 @@ export_path() {
     [[ ! -d "$dir" ]] && {
         # echo "❌ export_path: Skipped: $dir not found"
         # echo "[$timestamp] ❌ export_path: Not a directory: $dir (called by $caller_info)" >> "$log_file"
-        zshlog -f "$log_file" "export_path: ❌ Skipped: $dir not found / not a directory (called by $caller_info)"
+        $ZUTILS/zshlog -f "$log_file" "export_path: ❌ Skipped: $dir not found / not a directory (called by $caller_info)"
         return 1
     }
 
@@ -42,7 +42,7 @@ export_path() {
     # {
     #     echo "[$timestamp] ✅ PATH UPDATED: ${dir/#$HOME/~} (triggered by $caller_info)"
     # } >> "$log_file"
-    zshlog -l "" -f "$log_file" "export_path: ✅ Added: ${dir/#$HOME/~} (called by $caller_info)"
+    $ZUTILS/zshlog -l "" -f "$log_file" "export_path: ✅ Added: ${dir/#$HOME/~} (called by $caller_info)"
 }
 
 alias export='noglob _export_with_log'

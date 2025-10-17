@@ -10,7 +10,7 @@ export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 
 # === Universal umask (default permissions for new files) ===
-umask 022
+umask 022                                       # Default: 755 for dirs, 644 for files
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
@@ -25,6 +25,8 @@ export BREWLOGS="$HOME/.config/brew/logs"       # === BREWLOGDIR (brew related l
 # Default Claude data directory
 export CLAUDE_CONFIG_DIR="$HOME/.config/claude"
 
+export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no-color" || grep --color=never "" /dev/null >/dev/null 2>&1 && echo "--color=never" || echo "")
+
 # # Or multiple directories
 # export CLAUDE_CONFIG_DIR="$HOME/.config/claude,$HOME/.claude"
 
@@ -34,7 +36,7 @@ export HISTFILE="$XDG_STATE_HOME/zsh/history"
 export HISTSIZE=200000
 export SAVEHIST=200000
 
-# === Secure Default brew PATH ===
+# === Secure Default brew PATH addition ===
 export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 export EDITOR="nvim"                            # === Editor ===

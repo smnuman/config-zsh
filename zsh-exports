@@ -6,7 +6,9 @@ export VISUAL="$EDITOR"         # Set visual editor to Neovim
 export BAT_THEME='gruvbox-dark' # Set bat theme to gruvbox-dark
 
 export CLICOLOR=1
-export LSCOLORS=GxFxCxDxBxegedabagaced
+# export LSCOLORS=GxFxCxDxBxegedabagaced # macOS default
+# export LSCOLORS=ExFxBxDxCxegedabagacad
+export LSCOLORS=GxHgExDxCxhbadabaggacad
 export GREP_OPTIONS='--color=auto'
 export K_SHOW_GIT=1             # for 'k' to work with git status
 
@@ -22,4 +24,9 @@ export ZSH_HISTORY_SEARCH_STYLE="bashlike"  # Cursor at end (default), or use "z
 export_path "$BREWDOTS"
 export_path "$ZUTILS"
 export_path "$BRUTILS"
-export_path "$HOME/.config/zsh/git-utils"
+export_path "$ZDOTDIR/git-utils/"
+export_path "$XDG_CONFIG_HOME/tmux/scripts/"
+export_path "$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/"
+
+export NNN_OPTS='eEx'
+export NNN_PLUG='p:preview-tui;o:fzopen'

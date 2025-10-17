@@ -8,6 +8,7 @@ alias la='ls -a'        # List all files including hidden ones
 alias l='ls'            # List files in a short yet multi-column format
 alias l.='ls -A'        # List all files in short format without human-readable sizes
 alias 'll.'='ls -lAG'   # List all files in long format with human-readable sizes
+alias ll..='ls -ld .[^.]*' # List only hidden files (dotfiles) in current directory
 alias lt='ls -lt'       # List files sorted by modification time, newest first
 # alias .='echo $PWD'     # Display the working directory (disabled - conflicts with source builtin)
 alias lt='ls -alrt'     # List all files sorted by modification time, oldest first
@@ -55,9 +56,9 @@ alias ha='history -a'                     # Append history to file immediately
 alias hs='history -s'                     # Search history interactively
 alias hc='history -c'                     # Clear history for current session
 alias htime='fc -lt "%F %T"'              # Show history with timestamps
-alias hgrep='history 1 | grep'            # Grep through full history
+# alias hgrep='history 1 | grep'            # Grep through full history
 # alias htop='history 1 | sort -nr | head'  # Show most recent commands
-alias hg='history|grep '                  # Search history for a specific term
+alias hg='history 1 | grep --color=never ' # Search full history for a specific previous command
 
 alias cat='bat --paging=never'            # Use bat instead of cat
 alias mdcd='function _mkcd(){ mkdir -p "$1" && cd "$1"; }; _mkcd'
@@ -72,3 +73,55 @@ alias ports='sudo lsof -i -P | grep LISTEN'
 alias myip='curl ifconfig.me && echo'  # Get public IP address
 alias localip="ipconfig getifaddr en0" # Get local IP address (macOS)
 alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder; echo "DNS cache flushed."' # Flush DNS cache (macOS)
+
+# ======================= File Managers =======================
+alias f='fman'
+# alias l='lf'  # already used as 'ls' alias
+alias n='nnn'
+alias y='yazi'
+
+# =============================================================
+# ##               NOMAD Smart tmux helpers                  ##
+# =============================================================
+
+# Smart reattach-or-new (attach if exists, else create) tmux session
+t() {
+  local name="${1:-nomad}"
+  tmux has-session -t "$name" 2>/dev/null \
+    && tmux attach -t "$name" \
+    || tmux new -s "$name"
+}
+
+# Quickly create or switch to a new tmux window
+tnew() {
+  local name="${1:-${PWD##*/}}"
+#   local cwd_name="${PWD##*/}"  # last folder name
+  local session="${2:-nomad}"
+
+  # Auto-name the window after current folder if none provided
+#   [[ -z "$name" ]] && name="$cwd_name"
+
+  if [[ -n "$TMUX" ]]; then
+    # Inside tmux: create new window
+    tmux new-window -n "$name"
+    tmux display-message "🪟 Opened new window: $name"
+  else
+    # Outside tmux: attach or create
+    tmux has-session -t "$session" 2>/dev/null \
+      && tmux new-window -t "$session" -n "$name" \
+      || tmux new -s "$session" -n "$name"
+  fi
+}
+
+# Short alias
+alias tw='tnew'
+# --- tmux shortcuts for NOMAD setup ---
+alias ta='tmux attach -t'              # attach to a session
+alias tn='tmux new -s'                 # create a new session
+alias tl='tmux ls'                     # list sessions
+alias tk='tmux kill-session -t; tmux ls'        # kill a session
+alias tka='tmux kill-server'           # kill all tmux sessions
+alias td='tmux detach'                 # detach from inside a session or standard: <prefix> + d
+alias ts='tmux-start'                  # use your custom tmux starter script
+
+# ==================== tmux helpers end here ====================

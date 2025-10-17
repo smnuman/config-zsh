@@ -12,7 +12,7 @@ local ZLOGDLOCAL=
 local LOGFILE="plugin-manager.zlog"
 
 # If the function zshlog_usage is not defined, source the file.
-[[ ! -f zshlog_usage ]] && . "$ZUTILS/zsh-utils.zsh"
+# [[ ! -f zshlog_usage ]] && . "$ZUTILS/zsh-utils.zsh"
 
 git_clone() {
     [[ $# -eq 0 ]] && { echo "\n\t===\n\t⚠️  Usage: git_clone <repo> <dest> \n\t===\n"; return 0; }
@@ -20,22 +20,40 @@ git_clone() {
     local REPO="$1" DEST="$2"
     local CALLER="\e[0;42m${funcstack[2]}\e[0m"
 
-    zshlog -f "$LOGFILE" -n " <$CALLER> : \e[0;32mCloning \e[0;42m $REPO\e[31m → \e[0;42m $DEST \e[0m"
+    $ZUTILS/zshlog -f "$LOGFILE" -n " <$CALLER> : \e[0;32mCloning \e[0;42m $REPO\e[31m → \e[0;42m $DEST \e[0m"
 
     git clone --depth=1 "git@github.com:$REPO.git" "$DEST" && return 0
 
-    zshlog -f "$LOGFILE" -v -t " <$CALLER> \e[33;47m:❌ Failed to clone $REPO.git \e[0m" && return 1
+    $ZUTILS/zshlog -f "$LOGFILE" -v -t " <$CALLER> \e[33;47m:❌ Failed to clone $REPO.git \e[0m" && return 1
 }
 
+# Actual routine:
+# zsh_add_file() {
+#   [ -f "$ZDOTDIR/$1" ] && source "$ZDOTDIR/$1"
+# }
+# Rest are error handling and logging
+# Function call: zsh_add_file <file_name_relative_to_ZDOTDIR>
 zsh_add_file() {
     local CALLER="${funcstack[2]}"
 
     [[ -f "$ZDOTDIR/$1" ]] && source "$ZDOTDIR/$1" && {
-        zshlog -f "$LOGFILE" --log " <\e[0;33m$CALLER\e[0m>: \e[0;32mFile\e[0m \"$1\" \e[32msourced successfully\e[0m "
+        $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m$CALLER\e[0m>: \e[0;32mFile\e[0m \"$1\" \e[32msourced successfully\e[0m "
         return 0
     } || return 1
 }
 
+# Actual routine:
+# function zsh_add_plugin() {
+#     local REPO="$1"
+#     local PLUGIN_NAME="${REPO##*/}"
+#     # if folder is not available, clone it from github
+#     [ ! -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ] && git clone "https://github.com/$REPO.git" "$ZDOTDIR/plugins/$PLUGIN_NAME"
+#     # Source the plugin-file : either of the 2 possible ones
+#     zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh" || \
+#     zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh"
+# }
+# Rest are error handling and logging
+# Function call: zsh_add_plugin <github_repo>
 zsh_add_plugin() {
     local REPO="$1"
     local PLUGIN_NAME="${REPO##*/}"
@@ -48,10 +66,28 @@ zsh_add_plugin() {
     local TRY1="plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh"
     local TRY2="plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh"
     { zsh_add_file "$TRY1" || zsh_add_file "$TRY2" ;} || \
-    { zshlog -f "$LOGFILE" --error -v -t "===\e[0;31m:❌ Couldn't source file: \e[36m["$TRY1"]\e[31m or \e[36m["$TRY2"]\e[31m \e[0m==="; }
+    { $ZUTILS/zshlog -f "$LOGFILE" --error -v -t "===\e[0;31m:❌ Couldn't source file: \e[36m["$TRY1"]\e[31m or \e[36m["$TRY2"]\e[31m \e[0m==="; }
     # { echo -e "\t===\e[0;31;47m zsh_add_plugin:❌ Couldn't source file: \e[36m["$TRY1"]\e[31m or \e[36m["$TRY2"]\e[31m \e[0m==="; }
 }
 
+# Actual routine:
+# function zsh_add_completion() {
+#     local REPO="$1"
+#     local DO_COMPINIT="$2"
+#     local PLUGIN_NAME="${REPO##*/}"
+#     if [ ! -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ]; then
+#         git clone "https://github.com/$REPO.git" "$ZDOTDIR/plugins/$PLUGIN_NAME"
+#         # fpath+=$(ls $ZDOTDIR/plugins/$PLUGIN_NAME/_*)
+#     fi
+#     # For completions -- get all files starting with _* in the plugin dir
+#     completion_file_path=$(ls $ZDOTDIR/plugins/$PLUGIN_NAME/_*)
+#     fpath+="$(dirname "${completion_file_path}")"
+#     zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh"
+#     completion_file="$(basename "${completion_file_path}")"
+#     if [ "$DO_COMPINIT" = true ] && compinit "${completion_file:1}"
+# }
+# Rest are error handling and logging
+# Function call: zsh_add_completion <github_repo> <true|false>
 zsh_add_completion() {
     local REPO="$1"
     local DO_COMPINIT="$2"
@@ -61,23 +97,23 @@ zsh_add_completion() {
     local LOCAL_FILE="${LOCAL_PATH}/_${REPO}"
 
     if [[ "$REPO" == */* ]]; then
-        [[ ! -d "$PLUGIN_PATH" ]] && { git_clone "$REPO" "$PLUGIN_PATH" || { zshlog -f "$LOGFILE" -t -l error "❌ Failed to clone completion plugin: $REPO"; return 1; } } || \
-        zshlog -f "$LOGFILE" --warn "Plugin $PLUGIN_NAME already exists, skipping clone."
+        [[ ! -d "$PLUGIN_PATH" ]] && { git_clone "$REPO" "$PLUGIN_PATH" || { $ZUTILS/zshlog -f "$LOGFILE" -t -l error "❌ Failed to clone completion plugin: $REPO"; return 1; } } || \
+        $ZUTILS/zshlog -f "$LOGFILE" --warn "Plugin $PLUGIN_NAME already exists, skipping clone."
 
         zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh" || \
-        { zshlog -f "$LOGFILE" --error -t "===\e[0;31;47m:❌ Missing completions source: [${PLUGIN_PATH:-$HOME/~}/$PLUGIN_NAME.plugin.zsh] \e[0m==="; }
+        { $ZUTILS/zshlog -f "$LOGFILE" --error -t "===\e[0;31;47m:❌ Missing completions source: [${PLUGIN_PATH:-$HOME/~}/$PLUGIN_NAME.plugin.zsh] \e[0m==="; }
 
         setopt local_options null_glob
         local compfiles=($PLUGIN_PATH/_*)
         if (( ${#compfiles[@]} > 0 )); then
             fpath=("$PLUGIN_PATH" $fpath)
-            zshlog -f "$LOGFILE" --log "➕ Added completion plugin '$PLUGIN_NAME' to fpath."
+            $ZUTILS/zshlog -f "$LOGFILE" --log "➕ Added completion plugin '$PLUGIN_NAME' to fpath."
         fi
     elif [[ -f "$LOCAL_FILE" ]]; then
         fpath=("$LOCAL_PATH" $fpath)
-        zshlog -f "$LOGFILE" --log "➕ Added local completion '${LOCAL_FILE##*/}' to fpath."
+        $ZUTILS/zshlog -f "$LOGFILE" --log "➕ Added local completion '${LOCAL_FILE##*/}' to fpath."
     else
-        zshlog -f "$LOGFILE" --warn -t "⚠️  No completion found for '$REPO' (remote or local)."
+        $ZUTILS/zshlog -f "$LOGFILE" --warn -t "⚠️  No completion found for '$REPO' (remote or local)."
     fi
 
     # Initialise completion system only once
@@ -98,21 +134,21 @@ zsh_compinit_once() {
 
     # Root shells get -u to skip insecure dir checks
     if [[ $EUID -eq 0 ]]; then
-        zshlog -f "$LOGFILE" --warn "⚠️  Running compinit in root shell with -u (skipping security check)."
+        $ZUTILS/zshlog -f "$LOGFILE" --warn "⚠️  Running compinit in root shell with -u (skipping security check)."
         compinit -u
     else
         compinit
     fi
 
     __COMPINIT_RAN=1
-    zshlog -f "$LOGFILE" "✅ Compinit initialised."
+    $ZUTILS/zshlog -f "$LOGFILE" "✅ Compinit initialised."
 }
 
 zsh_update_plugins() {
     for DIR in "$ZDOTDIR"/plugins/*/.git; do
         local PLUGIN_PATH="${DIR%/.git}"
-        zshlog -f "$LOGFILE" "Updating ${PLUGIN_PATH##*/}..."
-        git -C "$PLUGIN_PATH" pull --quiet --rebase && zshlog -f "$LOGFILE" "...done" || zshlog -f "$LOGFILE" --error "...failed ❌"
+        $ZUTILS/zshlog -f "$LOGFILE" "Updating ${PLUGIN_PATH##*/}..."
+        git -C "$PLUGIN_PATH" pull --quiet --rebase && $ZUTILS/zshlog -f "$LOGFILE" "$(basename "$DIR").git ...done" || $ZUTILS/zshlog -f "$LOGFILE" --error "$(basename "$DIR").git ...failed ❌"
     done
 }
 

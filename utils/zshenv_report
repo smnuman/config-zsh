@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+# ~/.config/zsh/utils/zshenv_report
+# ===========================================================================
+# --- Zsh Environment Report ---
+# Generates a report of key environment variables and paths
+# Useful for debugging and ensuring correct setup
+# ===========================================================================
+local logfile="${ZLOGDIR:-$HOME/.config/zsh/logs}/zshenv_report.log"
+mkdir -p "${logfile:h}"   # ensure log dir exists
+
+{
+    echo "=== Zsh Environment Report ==="
+    echo "Generated: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo
+    echo "LANG=$LANG"
+    echo "LC_ALL=$LC_ALL"
+    echo "HOME=$HOME"
+    echo "XDG_CONFIG_HOME=${${XDG_CONFIG_HOME:-$HOME/.config/}/$HOME/~}"
+    echo "ZDOTDIR=${ZDOTDIR/$HOME/~}"
+    echo "ZLOGDIR=${ZLOGDIR/$HOME/~}"
+    echo "ZLOGFILE=${ZLOGFILE/$HOME/~}"
+    echo "BREWDOTS=${BREWDOTS/$HOME/~}"
+    echo "BREWLOGS=${BREWLOGS/$HOME/~}"
+    echo "BRUTILS=${BRUTILS/$HOME/~}"
+    echo "ZUTILS=${ZUTILS/$HOME/~}"
+    echo "BAT_CONFIG_DIR=${BAT_CONFIG_DIR/$HOME/~}"
+    echo "EDITOR=$EDITOR"
+    echo "VISUAL=$VISUAL"
+    echo "ZSHENV_DEBUG=$ZSHENV_DEBUG"
+    echo "ZSHF_VERBOSE=$ZSHF_VERBOSE"
+    echo
+    echo "PATH=$(echo -e "\n"--${PATH//:/\\n--})"
+    echo "==================================="
+} >| "$logfile"
+/bin/cat "$logfile"
