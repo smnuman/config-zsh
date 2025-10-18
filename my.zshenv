@@ -24,14 +24,14 @@ export BREWLOGS="$HOME/.config/brew/logs"       # === BREWLOGDIR (brew related l
 
 # Default Claude data directory
 export CLAUDE_CONFIG_DIR="$HOME/.config/claude"
-
-export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no-color" || grep --color=never "" /dev/null >/dev/null 2>&1 && echo "--color=never" || echo "")
-
 # # Or multiple directories
 # export CLAUDE_CONFIG_DIR="$HOME/.config/claude,$HOME/.claude"
 
+export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no-color" || grep --color=never "" /dev/null >/dev/null 2>&1 && echo "--color=never" || echo "")
+
 export BAT_CONFIG_DIR="$HOME/.config/bat"       # === Bat Config Directory ===
 
+# export HISTFILE="$$HOME/.local/state/zsh/history"
 export HISTFILE="$XDG_STATE_HOME/zsh/history"
 export HISTSIZE=200000
 export SAVEHIST=200000
