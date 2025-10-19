@@ -6,9 +6,12 @@ export VISUAL="$EDITOR"         # Set visual editor to Neovim
 export BAT_THEME='gruvbox-dark' # Set bat theme to gruvbox-dark
 
 export CLICOLOR=1
-export LSCOLORS=GxHgExDxCxhbadabaggacad
+export LSCOLORS='GxHgExDxCxhbadabaggacad'  # Custom ls colors for Mac OS
 export GREP_OPTIONS='--color=auto'
 export K_SHOW_GIT=1             # for 'k' to work with git status
+# lsg: ls-with-git-status from:https://github.com/gerph/ls-with-git-status/
+export LSG_COMMAND=         # use 'gls' on Mac OS to force the GNU version.(default: 'ls')
+export LSG_OPTIONS=' -alGgo'
 
 # For compilers to find curl you may need to set:
 export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
@@ -28,7 +31,3 @@ export_path "$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/"
 
 export NNN_OPTS='eEx'
 export NNN_PLUG='p:preview-tui;o:fzopen'
-
-# lsg: ls-with-git-status from:https://github.com/gerph/ls-with-git-status/
-export LSG_COMMAND=         # use 'gls' on Mac OS to force the GNU version.(default: 'ls')
-export LSG_OPTIONS=' -alG'

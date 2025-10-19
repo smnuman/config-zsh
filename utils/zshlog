@@ -14,7 +14,7 @@
 
 # Helper: Usage message for zshlog
 zshlog_usage() {
-    echo "⚠️  Usage: zshlog [--help|-h|-d|--file|-f|-n|-t|-s|--verbose|-v|--quiet|-q] <message>"
+    echo "\n⚠️  Usage: zshlog [--help|-h|-d|--file|-f|-n|-t|-s|--verbose|-v|--quiet|-q] <message>\n"
     echo "    --info        Log level INFO (default)"
     echo "    --warn        Log level WARN"
     echo "    --error       Log level ERROR"
@@ -44,6 +44,7 @@ clean() { echo "$1" | sed -E 's/\x1B\[[0-9;]*m//g' | sed -E 's/%F\{[^}]*\}//g; s
 # }
 
 [[ $# -eq 0 ]] && { zshlog_usage; return; }
+
 local opt_echo="" opt_skiplog=false tab="" nl=""
 
 # Parse options

@@ -1,3 +1,6 @@
 [submodule "git-utils"]
 	path = git-utils
 	url = git@github.com:smnuman/zsh-git-utils.git
+[submodule "prompt"]
+    path = prompt
+    url = git@github.com:smnuman/zsh-prompt.git
