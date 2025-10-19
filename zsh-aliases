@@ -5,7 +5,7 @@
 alias ll='ls -l'        # List all files in long format with the current and parent directories
 alias lla='ls -al'      # List all files including hidden ones but the current and parent
 alias la='ls -a'        # List all files including hidden ones
-alias l='lsg -go'           # List files in a short yet multi-column format
+alias l='lsg'           # List files in a short yet multi-column format
 alias l.='ls -A'        # List all files in short format without human-readable sizes
 alias 'll.'='ls -lAG'   # List all files in long format with human-readable sizes
 alias 'll..'="ls -ld .[^.]*" # List only hidden files (dotfiles) in current directory
@@ -29,6 +29,10 @@ alias which='type -a'    # Show all locations of a command
 
 # Return to previous folder/directory
 alias -- -='cd -'
+# alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
 # ---
 alias zlog='tail -n 20 "$ZLOGDIR/$ZLOGFILE"'
 alias pluglog='tail -n 20 "$ZLOGDIR/plugin-update.log"'
