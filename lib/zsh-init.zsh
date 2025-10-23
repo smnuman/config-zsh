@@ -12,6 +12,7 @@ zsh_add_file "git-utils/git-utils.zsh"  # - Git utilities like: - gsync, - grepo
 zsh_add_plugin zsh-users/zsh-autosuggestions
 zsh_add_plugin zsh-users/zsh-syntax-highlighting
 zsh_add_plugin zsh-users/zsh-history-substring-search
+zsh_add_plugin Aloxaf/fzf-tab
 zsh_add_plugin smnuman/zsh-history-search-end-match
 zsh_add_plugin supercrabtree/k
 
@@ -22,17 +23,19 @@ zsh_add_completion zsh-users/zsh-completions true
 # ===================
 
 # Completion sorting and grouping
-zstyle ':completion:*' sort true
-zstyle ':completion:*' list-suffixes true
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-zstyle ':completion:*:files' ignored-patterns '*~' '*.o' '*.pyc'
-zstyle ':completion:*' file-patterns '*(-/):directories' '*(N)'
-zstyle ':completion:*' verbose yes
+zstyle ':completion:*'              sort true
+zstyle ':completion:*'              list-suffixes true
+zstyle ':completion:*'              group-name ''
+zstyle ':completion:*'              menu no                              # default 'select'
+zstyle ':completion:*'              matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*:default'      list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*:files'        ignored-patterns '*~' '*.o' '*.pyc'
+zstyle ':completion:*'              file-patterns '*(-/):directories' '*(N)'
+zstyle ':completion:*'              verbose yes
 zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
-zstyle ':completion:*' use-cache on
+zstyle ':completion:*'              use-cache on
 [[ -d "$ZDOTDIR/.zcompcache" ]] || mkdir -p "$ZDOTDIR/.zcompcache"
-zstyle ':completion:*' cache-path "$ZDOTDIR/.zcompcache"
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' expand 'yes'
+zstyle ':completion:*'              cache-path "$ZDOTDIR/.zcompcache"
+zstyle ':completion:*'              expand 'yes'
+zstyle ':fzf-tab:complete:cd:*'     fzf-preview 'ls --color $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*'  fzf-preview 'ls --color $realpath'

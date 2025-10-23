@@ -29,12 +29,12 @@ bindkey '^[[C' forward-char              # → arrow: forward char
 bindkey '^[[D' backward-char             # ← arrow: backward char
 
 # --- 5️⃣ History Search (optional enhancement) ---
+bindkey '^P' history-search-backward    # Ctrl+P for previous matching command
+bindkey '^N' history-search-forward     # Ctrl+N for next matching command
 autoload -Uz up-line-or-beginning-search
 autoload -Uz down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-bindkey '^P' up-line-or-beginning-search  # Ctrl+P for previous matching command
-bindkey '^N' down-line-or-beginning-search # Ctrl+N for next matching command
 
 # --- 6️⃣ Quick Cursor Movement (optional) ---
 bindkey '^[f' forward-word               # Alt+F → forward one word

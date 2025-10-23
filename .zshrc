@@ -13,6 +13,8 @@
 
 echo -e "\n\t=== === === B O O T I N G === === ===\n"
 
+[[ -f "$ZUTILS/history-toggle" ]] && . "$ZUTILS/history-toggle" 2>/dev/null || echo ".zshrc: 'history-toggle' utility not found (check: ${ZUTILS/$HOME/~}/history-toggle)"
+
 # Enable hook & colors
 autoload -Uz add-zsh-hook
 autoload -Uz colors && colors

@@ -32,9 +32,12 @@ export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no
 export BAT_CONFIG_DIR="$HOME/.config/bat"       # === Bat Config Directory ===
 
 # export HISTFILE="$$HOME/.local/state/zsh/history"
-export HISTFILE="$XDG_STATE_HOME/zsh/history"
-export HISTSIZE=200000
-export SAVEHIST=200000
+# export HISTFILE="$XDG_STATE_HOME/zsh/history"
+# export HISTSIZE=200000
+# export SAVEHIST=200000
+HISTFILE="~/.zsh_history"
+HISTSIZE=200000
+SAVEHIST=200000
 
 # === Secure Default brew PATH addition ===
 export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"

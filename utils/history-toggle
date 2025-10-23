@@ -1,0 +1,35 @@
+# == 🧩 Persistent History Toggle ==
+# Cache file to remember last mode
+HISTORY_MODE_CACHE="${HOME}/.cache/zsh_history_mode"
+
+# Ensure cache folder exists
+mkdir -p "$(dirname "$HISTORY_MODE_CACHE")"
+
+# Apply previous mode if cache exists
+if [[ -f "$HISTORY_MODE_CACHE" ]]; then
+    mode=$(<"$HISTORY_MODE_CACHE")
+    if [[ "$mode" == "private" ]]; then
+        unsetopt SHARE_HISTORY INC_APPEND_HISTORY
+    else
+        setopt SHARE_HISTORY INC_APPEND_HISTORY
+    fi
+else
+    # Default mode if no cache exists
+    setopt SHARE_HISTORY INC_APPEND_HISTORY
+fi
+
+# Alias/function to toggle mode
+toggle_history_share() {
+    if setopt | grep -q sharehistory; then
+        unsetopt SHARE_HISTORY INC_APPEND_HISTORY
+        echo "🔏 History sharing disabled — now private."
+        echo "private" > "$HISTORY_MODE_CACHE"
+    else
+        setopt SHARE_HISTORY INC_APPEND_HISTORY
+        echo "🌎 History sharing enabled — now shared."
+        echo "shared" > "$HISTORY_MODE_CACHE"
+    fi
+    # Force prompt redraw
+    zle && zle reset-prompt 2>/dev/null
+}
+alias histoggle='toggle_history_share'

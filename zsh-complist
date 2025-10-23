@@ -21,8 +21,8 @@ bindkey '^[[A' up-line-or-history               # Up arrow: previous history or 
 bindkey '^[[B' down-line-or-history             # Down arrow: next history or menu item
 
 # Optional: use Ctrl-J / Ctrl-K for menu navigation as alternatives to arrows
-bindkey '^J' menu-select-down                   # Ctrl+J: next menu item
-bindkey '^K' menu-select-up                     # Ctrl+K: previous menu item
+# bindkey '^J' menu-select-down                   # Ctrl+J: next menu item
+# bindkey '^K' menu-select-up                     # Ctrl+K: previous menu item
 
 # Use the up and down keys to navigate the history
 bindkey '\e[A' history-substring-search-up

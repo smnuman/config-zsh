@@ -13,18 +13,20 @@ setopt nocaseglob               # Case-insensitive globs
 setopt rcexpandparam            # Fancy parameter expansion like ${^var}
 
 # === History Management ===
-setopt appendhistory            # Append to history file, don’t overwrite
-setopt inc_append_history       # Write to history file immediately
-setopt sharehistory             # Share history between different shells
-setopt extended_history         # Record timestamp + runtime
+setopt APPEND_HISTORY           # Append (not overwrite) on shell exit
+setopt INC_APPEND_HISTORY       # Append commands as soon as executed
+setopt SHARE_HISTORY            # Share history instantly between sessions
+setopt EXTENDED_HISTORY         # Store timestamps in history
+setopt HIST_REDUCE_BLANKS       # Trim extra spaces
+setopt HIST_VERIFY              # Show command before running from history
+setopt HIST_IGNORE_DUPS         # Avoid duplicates
 setopt histignorealldups        # Remove older duplicates
 setopt histignorespace          # Skip commands starting with a space
 setopt hist_save_no_dups        # Save history without duplicates
 setopt hist_find_no_dups        # Do not find duplicates in history search
-setopt hist_reduce_blanks       # Reduce blanks in history
-setopt histverify               # Show the command before executing it
 setopt hist_no_store            # Don't store history commands themselves
-setopt hist_ignore_dups         # Don’t store immediately repeated commands
+# Just in case, some redundant options for history
+setopt HIST_BEEP                # Audible feedback on failed history search
 
 # === Prompt Substitution ===
 setopt prompt_subst             # Allow $(...) in PROMPT

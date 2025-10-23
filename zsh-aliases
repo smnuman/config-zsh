@@ -65,6 +65,9 @@ alias htime='fc -lt "%F %T"'              # Show history with timestamps
 # alias hgrep='history 1 | grep'            # Grep through full history
 # alias htop='history 1 | sort -nr | head'  # Show most recent commands
 alias hg='history 1 | grep --color=never ' # Search full history for a specific previous command
+# histoggle: toggle shared vs private history mode
+# alias histoggle='if setopt | grep -q share_history; then unsetopt SHARE_HISTORY INC_APPEND_HISTORY; echo "🔒 private"; else setopt SHARE_HISTORY INC_APPEND_HISTORY; echo "🌐 shared"; fi'
+# =================== History aliases end here ========================
 
 alias cat='bat --paging=never'            # Use bat instead of cat
 alias mdcd='function _mkcd(){ mkdir -p "$1" && cd "$1"; }; _mkcd'
