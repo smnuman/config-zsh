@@ -12,6 +12,7 @@ zsh_add_file "git-utils/git-utils.zsh"  # - Git utilities like: - gsync, - grepo
 zsh_add_plugin zsh-users/zsh-autosuggestions
 zsh_add_plugin zsh-users/zsh-syntax-highlighting
 zsh_add_plugin zsh-users/zsh-history-substring-search
+# zsh_add_plugin eza-community/eza-themes   # NOT TO BE SOURCED
 zsh_add_plugin Aloxaf/fzf-tab
 zsh_add_plugin smnuman/zsh-history-search-end-match
 zsh_add_plugin supercrabtree/k

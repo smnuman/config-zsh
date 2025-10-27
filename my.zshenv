@@ -38,6 +38,7 @@ export BAT_CONFIG_DIR="$HOME/.config/bat"       # === Bat Config Directory ===
 HISTFILE="~/.zsh_history"
 HISTSIZE=200000
 SAVEHIST=200000
+# HISTDUPE=erase       # no duplicate entries
 
 # === Secure Default brew PATH addition ===
 export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"

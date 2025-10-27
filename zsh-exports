@@ -11,7 +11,9 @@ export GREP_OPTIONS='--color=auto'
 export K_SHOW_GIT=1             # for 'k' to work with git status
 # lsg: ls-with-git-status from:https://github.com/gerph/ls-with-git-status/
 export LSG_COMMAND=             # use 'gls' on Mac OS to force the GNU version.(default: 'ls')
-export LSG_OPTIONS=' -alGgo'
+export LSG_OPTIONS=' -aGgo'
+
+export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"  # eza config dir
 
 # For compilers to find curl you may need to set:
 export LDFLAGS="-L/opt/homebrew/opt/curl/lib"

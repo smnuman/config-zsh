@@ -28,6 +28,12 @@ bindkey '^[[B' down-line-or-search       # ↓ arrow: same, forward
 bindkey '^[[C' forward-char              # → arrow: forward char
 bindkey '^[[D' backward-char             # ← arrow: backward char
 
+if zmodload -i zsh/complist 2>/dev/null; then
+  bindkey -M menuselect '^[[A' menu-select-up
+  bindkey -M menuselect '^[[B' menu-select-down
+  bindkey -M menuselect '^[[C' menu-select-right
+  bindkey -M menuselect '^[[D' menu-select-left
+fi
 # --- 5️⃣ History Search (optional enhancement) ---
 bindkey '^P' history-search-backward    # Ctrl+P for previous matching command
 bindkey '^N' history-search-forward     # Ctrl+N for next matching command
