@@ -3,8 +3,8 @@
 # The file is added in my shell(by .zshrc) from $ZDOTDIR/lib/pathtools.zsh
 # Best to source it from $ZDOTDIR/zsh-exports before any export PATH commands
 
-# Clean start - delete previous session path logs
-[[ -f "$ZLOGDIR/pathlog.zlog" ]] && rm -f "$ZLOGDIR/pathlog.zlog"
+# Clean start - empty previous session path logs (keep file for consistency)
+[[ -f "$ZLOGDIR/pathlog.zlog" ]] && : > "$ZLOGDIR/pathlog.zlog"
 
 # Usage e.g.: export_path "$HOME/.cargo/bin"
 export_path() {

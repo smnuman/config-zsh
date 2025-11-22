@@ -11,8 +11,8 @@
 local ZLOGDLOCAL=
 local LOGFILE="plugin-manager.zlog"
 
-# Clean start - delete previous session logs
-[[ -f "$ZLOGDIR/$LOGFILE" ]] && rm -f "$ZLOGDIR/$LOGFILE"
+# Clean start - empty previous session logs (keep file for consistency)
+[[ -f "$ZLOGDIR/$LOGFILE" ]] && : > "$ZLOGDIR/$LOGFILE"
 
 # If the function zshlog_usage is not defined, source the file.
 # [[ ! -f zshlog_usage ]] && . "$ZUTILS/zsh-utils.zsh"
@@ -23,9 +23,11 @@ git_clone() {
     local REPO="$1" DEST="$2"
     local CALLER="\e[0;42m${funcstack[2]}\e[0m"
 
-    $ZUTILS/zshlog -f "$LOGFILE" -n " <$CALLER> : \e[0;32mCloning \e[0;42m $REPO\e[31m → \e[0;42m $DEST \e[0m"
+    # Log cloning operation unless in performance mode
+    [[ "$ZSH_PERF_MODE" != "true" ]] && $ZUTILS/zshlog -f "$LOGFILE" -n " <$CALLER> : \e[0;32mCloning \e[0;42m $REPO\e[31m → \e[0;42m $DEST \e[0m"
 
-    git clone --depth=1 "git@github.com:$REPO.git" "$DEST" && return 0
+    # Use optimized git clone options
+    git clone --depth=1 --single-branch ${ZSH_PERF_MODE:+--quiet} "git@github.com:$REPO.git" "$DEST" 2>/dev/null && return 0
 
     $ZUTILS/zshlog -f "$LOGFILE" -v -t " <$CALLER> \e[33;47m:❌ Failed to clone $REPO.git \e[0m" && return 1
 }
@@ -37,16 +39,38 @@ git_clone() {
 # Rest are error handling and logging
 # Function call: zsh_add_file <file_name_relative_to_ZDOTDIR>
 zsh_add_file() {
-    local CALLER="${funcstack[1]:t} (${funcstack[2]:t})"
-    local filename=$1; filename_len=$([[ $CALLER == *"init"* ]] && echo 40 || echo 95 )
-    CALLER="${CALLER}$(printf '%*s' $((35-${#CALLER})) '')"
-    filename="${filename}$(printf '%*s' $(($filename_len-${#filename})) '')"
-
     [[ -f "$ZDOTDIR/$1" ]] && source "$ZDOTDIR/$1" && {
-        # $ZUTILS/zshlog -f "$LOGFILE" --log " ${CALLER}>: File $filename sourced successfully "
-        $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m${CALLER}\e[0m>: \e[0;32mFile\e[0m $filename \e[32msourced successfully\e[0m "
+        # Always log but optimize format in performance mode
+        if [[ "$ZSH_PERF_MODE" == "true" ]]; then
+            # Simple logging format - maintains logging requirement with minimal overhead
+            $ZUTILS/zshlog -f "$LOGFILE" --log "zsh_add_file: $1 sourced"
+        else
+            # Original detailed formatting for normal mode
+            local CALLER="${funcstack[1]:t} (${funcstack[2]:t})"
+            local filename=$1; filename_len=$([[ $CALLER == *"init"* ]] && echo 40 || echo 95 )
+            CALLER="${CALLER}$(printf '%*s' $((35-${#CALLER})) '')"
+            filename="${filename}$(printf '%*s' $(($filename_len-${#filename})) '')"
+            $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m${CALLER}\e[0m>: \e[0;32mFile\e[0m $filename \e[32msourced successfully\e[0m "
+        fi
         return 0
     } || return 1
+
+    # # Skip expensive formatting if performance mode enabled
+    # if [[ "$ZSH_PERF_MODE" == "true" ]]; then
+    #     [[ -f "$ZDOTDIR/$1" ]] && source "$ZDOTDIR/$1"
+    #     return $?
+    # fi
+
+    # # Original formatting for normal mode (maintain full zshlog structure)
+    # local CALLER="${funcstack[1]:t} (${funcstack[2]:t})"
+    # local filename=$1; filename_len=$([[ $CALLER == *"init"* ]] && echo 40 || echo 95 )
+    # CALLER="${CALLER}$(printf '%*s' $((35-${#CALLER})) '')"
+    # filename="${filename}$(printf '%*s' $(($filename_len-${#filename})) '')"
+
+    # [[ -f "$ZDOTDIR/$1" ]] && source "$ZDOTDIR/$1" && {
+    #     $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m${CALLER}\e[0m>: \e[0;32mFile\e[0m $filename \e[32msourced successfully\e[0m "
+    #     return 0
+    # } || return 1
 }
 
 # Actual routine:
