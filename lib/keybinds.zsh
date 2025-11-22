@@ -29,18 +29,20 @@ bindkey '^[[C' forward-char              # → arrow: forward char
 bindkey '^[[D' backward-char             # ← arrow: backward char
 
 if zmodload -i zsh/complist 2>/dev/null; then
-  bindkey -M menuselect '^[[A' menu-select-up
-  bindkey -M menuselect '^[[B' menu-select-down
-  bindkey -M menuselect '^[[C' menu-select-right
-  bindkey -M menuselect '^[[D' menu-select-left
+  bindkey -M menuselect '^[[A' menu-select-up       # Up arrow in menu select mode
+  bindkey -M menuselect '^[[B' menu-select-down     # Down arrow in menu select mode
+  bindkey -M menuselect '^[[C' menu-select-right    # Right arrow in menu select mode
+  bindkey -M menuselect '^[[D' menu-select-left     # Left arrow in menu select mode
 fi
 # --- 5️⃣ History Search (optional enhancement) ---
 bindkey '^P' history-search-backward    # Ctrl+P for previous matching command
 bindkey '^N' history-search-forward     # Ctrl+N for next matching command
-autoload -Uz up-line-or-beginning-search
-autoload -Uz down-line-or-beginning-search
-zle -N up-line-or-beginning-search
-zle -N down-line-or-beginning-search
+autoload -Uz up-line-or-beginning-search    # Ctrl+Up for previous matching command
+autoload -Uz down-line-or-beginning-search  # Ctrl+Down for next matching command
+zle -N up-line-or-beginning-search          # Ctrl+Up
+zle -N down-line-or-beginning-search        # Ctrl+Down
+bindkey '^[[1;5A' up-line-or-beginning-search    # Ctrl+Up
+bindkey '^[[1;5B' down-line-or-beginning-search  # Ctrl+Down
 
 # --- 6️⃣ Quick Cursor Movement (optional) ---
 bindkey '^[f' forward-word               # Alt+F → forward one word

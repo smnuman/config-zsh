@@ -34,10 +34,14 @@ git_clone() {
 # Rest are error handling and logging
 # Function call: zsh_add_file <file_name_relative_to_ZDOTDIR>
 zsh_add_file() {
-    local CALLER="${funcstack[2]}"
+    local CALLER="${funcstack[1]:t} (${funcstack[2]:t})"
+    local filename=$1; filename_len=$([[ $CALLER == *"init"* ]] && echo 40 || echo 95 )
+    CALLER="${CALLER}$(printf '%*s' $((35-${#CALLER})) '')"
+    filename="${filename}$(printf '%*s' $(($filename_len-${#filename})) '')"
 
     [[ -f "$ZDOTDIR/$1" ]] && source "$ZDOTDIR/$1" && {
-        $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m$CALLER\e[0m>: \e[0;32mFile\e[0m \"$1\" \e[32msourced successfully\e[0m "
+        # $ZUTILS/zshlog -f "$LOGFILE" --log " ${CALLER}>: File $filename sourced successfully "
+        $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m${CALLER}\e[0m>: \e[0;32mFile\e[0m $filename \e[32msourced successfully\e[0m "
         return 0
     } || return 1
 }
@@ -89,6 +93,7 @@ zsh_add_plugin() {
 # Rest are error handling and logging
 # Function call: zsh_add_completion <github_repo> <true|false>
 zsh_add_completion() {
+    local CALLER="${funcstack[1]:t} (${funcstack[2]:t})"; CALLER="${CALLER}$(printf '%*s' $((35-${#CALLER})) '')"
     local REPO="$1"
     local DO_COMPINIT="$2"
     local PLUGIN_NAME="${REPO##*/}"
@@ -97,23 +102,23 @@ zsh_add_completion() {
     local LOCAL_FILE="${LOCAL_PATH}/_${REPO}"
 
     if [[ "$REPO" == */* ]]; then
-        [[ ! -d "$PLUGIN_PATH" ]] && { git_clone "$REPO" "$PLUGIN_PATH" || { $ZUTILS/zshlog -f "$LOGFILE" -t -l error "❌ Failed to clone completion plugin: $REPO"; return 1; } } || \
-        $ZUTILS/zshlog -f "$LOGFILE" --warn "Plugin $PLUGIN_NAME already exists, skipping clone."
+        [[ ! -d "$PLUGIN_PATH" ]] && { git_clone "$REPO" "$PLUGIN_PATH" || { $ZUTILS/zshlog -f "$LOGFILE" -t -l error " \e[0;33m${CALLER}\e[0m>: ❌ Failed to clone completion plugin: $REPO"; return 1; } } || \
+        $ZUTILS/zshlog -f "$LOGFILE" --warn " <\e[0;33m${CALLER}\e[0m>: \e[0;32mPlugin\e[0m %K{green} $PLUGIN_NAME %k \e[0;32malready exists, skipping clone\e[0m."
 
         zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh" || \
-        { $ZUTILS/zshlog -f "$LOGFILE" --error -t "===\e[0;31;47m:❌ Missing completions source: [${PLUGIN_PATH:-$HOME/~}/$PLUGIN_NAME.plugin.zsh] \e[0m==="; }
+        { $ZUTILS/zshlog -f "$LOGFILE" --error -t " <\e[0;33m${CALLER}\e[0m>: \e[0;32m===\e[0;31;47m:❌ Missing completions source: [${PLUGIN_PATH:-$HOME/~}/$PLUGIN_NAME.plugin.zsh] \e[0m==="; }
 
         setopt local_options null_glob
         local compfiles=($PLUGIN_PATH/_*)
         if (( ${#compfiles[@]} > 0 )); then
             fpath=("$PLUGIN_PATH" $fpath)
-            $ZUTILS/zshlog -f "$LOGFILE" --log "➕ Added completion plugin '$PLUGIN_NAME' to fpath."
+            $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m${CALLER}\e[0m>: \e[0;32m✅ Added completion plugin\e[0;32m '$PLUGIN_NAME' \e[0;32mto fpath\e[0m."
         fi
     elif [[ -f "$LOCAL_FILE" ]]; then
         fpath=("$LOCAL_PATH" $fpath)
-        $ZUTILS/zshlog -f "$LOGFILE" --log "➕ Added local completion '${LOCAL_FILE##*/}' to fpath."
+        $ZUTILS/zshlog -f "$LOGFILE" --log " <\e[0;33m${CALLER}\e[0m>: \e[0;32m✅ Added local completion\e[0m '${LOCAL_FILE##*/}' \e[0;32mto fpath\e[0m."
     else
-        $ZUTILS/zshlog -f "$LOGFILE" --warn -t "⚠️  No completion found for '$REPO' (remote or local)."
+        $ZUTILS/zshlog -f "$LOGFILE" --warn -t " <\e[0;33m${CALLER}\e[0m>: \e[0;34m⚠️  No completion found for\e[0m '$REPO' \e[0;34m(remote or local)\e[0m."
     fi
 
     # Initialise completion system only once
@@ -126,6 +131,8 @@ zsh_add_completion() {
 zsh_compinit_once() {
     # Return if already run
     [[ -n "$__COMPINIT_RAN" ]] && return 0
+
+    local CALLER="${funcstack[1]:t} (${funcstack[2]:t})"; CALLER="${CALLER}$(printf '%*s' $((35-${#CALLER})) '')"; CALLER="%F{yellow}${CALLER}%f"
 
     # Load compinit if missing
     if ! whence compinit >/dev/null; then
@@ -141,7 +148,7 @@ zsh_compinit_once() {
     fi
 
     __COMPINIT_RAN=1
-    $ZUTILS/zshlog -f "$LOGFILE" "✅ Compinit initialised."
+    $ZUTILS/zshlog -f "$LOGFILE" " <${(q)CALLER}>: ✅ Compinit initialised."
 }
 
 zsh_update_plugins() {

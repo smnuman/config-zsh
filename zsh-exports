@@ -5,6 +5,9 @@ export EDITOR="vim"             # Set default editor to Neovim
 export VISUAL="$EDITOR"         # Set visual editor to Neovim
 export BAT_THEME='gruvbox-dark' # Set bat theme to gruvbox-dark
 
+# Default Claude data directory
+export CLAUDE_CONFIG_DIR="$HOME/.config/claude"
+
 export CLICOLOR=1
 export LSCOLORS='GxHgExDxCxhbadabaggacad'  # Custom ls colors for Mac OS
 export GREP_OPTIONS='--color=auto'

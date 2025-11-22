@@ -1,0 +1,18 @@
+#!/usr/bin/env zsh
+# ----------------------------------------
+# Zsh Boot Debug Logger (optional)
+# ----------------------------------------
+zsh_bootlog() {
+  [[ "$ZSH_DEBUG_BOOT" != "true" ]] && return 0
+  local stamp file="${1:-unknown-phase}"
+  stamp=$(date '+%Y-%m-%d %H:%M:%S')
+  print -- "[$stamp] → ${file}" >> "$ZLOGDIR/boot.zlog"
+  print -- "[$stamp] → ${file}"
+}
+
+if [[ "$ZSH_DEBUG_BOOT" == "true" ]]; then
+  mkdir -p "$ZLOGDIR"
+  : > "$ZLOGDIR/boot.zlog"      # truncate existing log
+  print -- "=== ZSH Boot Debug Started ===" >> "$ZLOGDIR/boot.zlog"
+  print -- "=== ZSH Boot Debug Started ==="
+fi

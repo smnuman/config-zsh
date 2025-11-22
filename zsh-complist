@@ -13,16 +13,41 @@ bindkey '^[[B' down-line-or-beginning-search      # Ctrl+N: search history forwa
 
 # --- Completion Menu Configuration ---
 zmodload -i zsh/complist                        # Load completion list module quietly
-zstyle ':completion:*' menu select              # Enable interactive menu completion
+# zstyle ':completion:*' menu select              # Enable interactive menu completion
+zstyle ':completion:*' menu select=1            # Start menu selection after first match
+zstyle ':completion:*' completer _complete _ignored _approximate _correct _menu_select  # Define completers§
+zstyle ':completion:*' single-ignored show-ignored  # Show ignored files in completions
+# zstyle ':completion:*' list-colors '$LS_COLORS'     # Use default terminal colors for completions
 _comp_options+=(globdots)                       # Include dotfiles in completions
 
+# Completion sorting and grouping
+zstyle ':completion:*'              sort true
+zstyle ':completion:*'              list-suffixes true
+zstyle ':completion:*'              group-name ''
+zstyle ':completion:*'              menu no                              # default 'select'
+zstyle ':completion:*'              matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*:default'      list-colors "${(s.:.)LS_COLORS}"
+
+# zstyle ':completion:*:files'        ignored-patterns '*~' '*.o' '*.pyc'
+zstyle ':completion:*'              ignored-patterns '*~' '*.o' '*.pyc' '*.bak' '*.backup' '*.archive' '*.arc?'  # Ignore backup/archive files
+
+zstyle ':completion:*'              file-patterns '*(-/):directories' '*(N)'
+zstyle ':completion:*'              verbose yes
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*'              use-cache on
+[[ -d "$ZDOTDIR/.zcompcache" ]] || mkdir -p "$ZDOTDIR/.zcompcache"
+zstyle ':completion:*'              cache-path "$ZDOTDIR/.zcompcache"
+zstyle ':completion:*'              expand 'yes'
+
+zstyle ':fzf-tab:complete:cd:*'             fzf-preview 'ls --color $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*'     fzf-preview 'ls --color $realpath'
 # Completion menu navigation with arrow keys (no conflict with Ctrl+P/N)
 bindkey '^[[A' up-line-or-history               # Up arrow: previous history or menu item
 bindkey '^[[B' down-line-or-history             # Down arrow: next history or menu item
 
 # Optional: use Ctrl-J / Ctrl-K for menu navigation as alternatives to arrows
-# bindkey '^J' menu-select-down                   # Ctrl+J: next menu item
-# bindkey '^K' menu-select-up                     # Ctrl+K: previous menu item
+bindkey '^J' menu-select-down                   # Ctrl+J: next menu item
+bindkey '^K' menu-select-up                     # Ctrl+K: previous menu item
 
 # Use the up and down keys to navigate the history
 bindkey '\e[A' history-substring-search-up

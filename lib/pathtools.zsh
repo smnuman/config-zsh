@@ -5,8 +5,8 @@
 
 # Usage e.g.: export_path "$HOME/.cargo/bin"
 export_path() {
-    local dir="$1"
-    local caller_info="${2:-${(%):-%x}:MAIN}"   # caller info passed in
+    local dir="$1" dirprint dirlength=0 sender
+    local caller_info="${2:-${${(%):-%x}:-MAIN}}"   # caller info passed in
     caller_info="${caller_info//$HOME/~}"
     local log_file="$ZLOGDIR/pathlog.zlog"
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
@@ -16,19 +16,24 @@ export_path() {
     dir="${dir%/}"
     dir="${dir/#\~/$HOME}"
 
+    dirlength=30
+    dirprint="${dir/#$HOME/~}"
+    dirprint="${dirprint}$(printf '%*s' $(($dirlength-${#dirprint})) '')"
+
+    sender="export_path (${${funcstack[2]}:t})"
+
     mkdir -p "${log_file:h}"  # create logs dir if missing
 
     [[ ! -d "$dir" ]] && {
-        # echo "❌ export_path: Skipped: $dir not found"
-        # echo "[$timestamp] ❌ export_path: Not a directory: $dir (called by $caller_info)" >> "$log_file"
-        $ZUTILS/zshlog -f "$log_file" "export_path: ❌ Skipped: $dir not found / not a directory (called by $caller_info)"
+        sender="${sender}$(printf '%*s' $((34-${#sender})) '')"
+        $ZUTILS/zshlog --error -f "$log_file" " \e[0m<%K{red} ${sender}%k>:%K{red} ❌ Skipped: %F{white}$dirprint%f not found / not a directory (called by ${caller_info:t}) %k"
         return 1
     }
 
     for existing in ${(s/:/)PATH}; do
         [[ "$existing" == "$dir" ]] && {
             echo "export_path: ⚠️   Skipped: $dir already in PATH"
-            echo "[$timestamp] :export_path: ⚠️   Already present: $dir (called by $caller_info)" >> "$log_file"
+            echo "[$timestamp] :$sender: ⚠️   Already present: $dirprint (called by ${caller_info})" >> "$log_file"
             return
         }
     done
@@ -42,7 +47,8 @@ export_path() {
     # {
     #     echo "[$timestamp] ✅ PATH UPDATED: ${dir/#$HOME/~} (triggered by $caller_info)"
     # } >> "$log_file"
-    $ZUTILS/zshlog -l "" -f "$log_file" "export_path: ✅ Added: ${dir/#$HOME/~} (called by $caller_info)"
+    sender="${sender}$(printf '%*s' $((35-${#sender})) '')"
+    $ZUTILS/zshlog --info -f "$log_file" " \e[0m<\e[0;33m$sender\e[0m>: \e[0;32m✅ Added:\e[0m "${dirprint}" (\e[32mcalled by ${caller_info:t}\e[0m) "
 }
 
 alias export='noglob _export_with_log'

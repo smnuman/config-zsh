@@ -1,4 +1,6 @@
 # Add zsh plugins with my plugin manager
+zsh_add_file "lib/completions"          # - Custom completions
+zsh_add_file "lib/keybinds.zsh"
 zsh_add_file "lib/pathtools.zsh"        # - Use EXPORT intelligently without bloating PATH environment var: creates logfile in ~/.config/zsh/logs/pathlog.zlog
 zsh_add_file "zsh-exports"              # - All export variables
 zsh_add_file "zsh-complist"             # - zsh/complist plugin for better completion
@@ -22,21 +24,3 @@ zsh_add_completion gutils
 zsh_add_completion zsh-users/zsh-completions true
 
 # ===================
-
-# Completion sorting and grouping
-zstyle ':completion:*'              sort true
-zstyle ':completion:*'              list-suffixes true
-zstyle ':completion:*'              group-name ''
-zstyle ':completion:*'              menu no                              # default 'select'
-zstyle ':completion:*'              matcher-list 'm:{a-z}={A-Za-z}'
-zstyle ':completion:*:default'      list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*:files'        ignored-patterns '*~' '*.o' '*.pyc'
-zstyle ':completion:*'              file-patterns '*(-/):directories' '*(N)'
-zstyle ':completion:*'              verbose yes
-zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
-zstyle ':completion:*'              use-cache on
-[[ -d "$ZDOTDIR/.zcompcache" ]] || mkdir -p "$ZDOTDIR/.zcompcache"
-zstyle ':completion:*'              cache-path "$ZDOTDIR/.zcompcache"
-zstyle ':completion:*'              expand 'yes'
-zstyle ':fzf-tab:complete:cd:*'     fzf-preview 'ls --color $realpath'
-zstyle ':fzf-tab:complete:__zoxide_z:*'  fzf-preview 'ls --color $realpath'

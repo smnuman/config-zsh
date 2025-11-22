@@ -1,0 +1,22 @@
+#!/usr/bin/env zsh
+
+# Show last N lines of current boot logfile (default: 25)
+zsh_bootlog_tail() {
+    local lines="${1:-25}"
+
+    # Resolve log file & directory using same logic as zshlog
+    local logfile="${LOGFILE:-zsh.zlog}"
+    local logdir="${ZLOGDLOCAL:-${ZLOGDIR:-${ZDOTDIR:-$HOME/.config/zsh}/logs}}"
+    local fullpath="$logdir/$logfile"
+
+    if [[ -f "$fullpath" ]]; then
+        echo "\n--- Bootlog (last $lines lines) ---"
+        tail -n "$lines" -- "$fullpath"
+        echo "-----------------------------------\n"
+    else
+        echo "No logfile found at: $fullpath"
+    fi
+}
+
+# Allow calling directly as a command
+zsh_bootlog_tail "$@"

@@ -14,13 +14,15 @@
 
 # Helper: Usage message for zshlog
 zshlog_usage() {
-    echo "\n⚠️  Usage: zshlog [--help|-h|-d|--file|-f|-n|-t|-s|--verbose|-v|--quiet|-q] <message>\n"
+    echo "\n⚠️  Usage: zshlog [--help|-h|-d|--file|-f|-n|-t|-s|--verbose|-v|--quiet|-q|--<color>] <message> [caller_function]\n"
     echo "    --info        Log level INFO (default)"
     echo "    --warn        Log level WARN"
     echo "    --error       Log level ERROR"
     echo "    --debug       Log level DEBUG (only if ZSH_DEBUG=true)"
     echo "    --log|--_|-l  Log level LOG (generic)"
     echo "    --file|-f     Specify a log file name (default: zsh.zlog in log directory)"
+    echo "    --<color>     Specify message color: --blue, --orange, --red, --green, --yellow, --magenta, --cyan, --white"
+    echo "    -c            Specify message color (same as --<color>)"
     echo "    -d            Specify a log directory name (default: ~/.config/zsh/logs)"
     echo "    -n            Add a newline before & after message"
     echo "    -t            Add a tab before message"
@@ -43,6 +45,46 @@ clean() { echo "$1" | sed -E 's/\x1B\[[0-9;]*m//g' | sed -E 's/%F\{[^}]*\}//g; s
 #         perl -CSDA -pe 's/[\x{1F300}-\x{1FAFF}\x{2600}-\x{26FF}]//gu'
 # }
 
+_getcaller() {
+    # --- Determine caller context (function + file) ---
+    local __func  __file __line
+
+    # Capture function call stack
+    # __func="${2:-${funcstack[2]:-${funcstack[1]:-}}}" # <-- original
+    __func="${1:-${funcstack[2]:-${funcstack[1]:-}}}"
+
+    # Try to capture file + line info from funcfiletrace if available
+    if (( ${#funcfiletrace[@]} > 0 )); then
+        __file="${funcfiletrace[1]%%:*}"
+        __line="${funcfiletrace[1]#*:}"
+    else
+        # Fallback: current executing file (for non-function contexts)
+        __file="${(%):-%N}"
+        __line=""
+    fi
+
+    # If we still have no useful file info, fallback to "unknown"
+    [[ -z "$__file" ]] && __file="unknown"
+
+    # Build __func string for display
+    if [[ -n "$__func" ]]; then
+        if [[ -n "$__line" ]]; then
+            __func="${__func} (${__file:t}:${__line})"
+        else
+            __func="${__func} (${__file:t})"
+        fi
+    else
+        if [[ -n "$__line" ]]; then
+            __func="${__file:t}:${__line}"
+        else
+            __func="${__file:t}"
+        fi
+    fi
+
+    print -- "$__func"
+}
+
+
 [[ $# -eq 0 ]] && { zshlog_usage; return; }
 
 local opt_echo="" opt_skiplog=false tab="" nl=""
@@ -50,23 +92,30 @@ local opt_echo="" opt_skiplog=false tab="" nl=""
 # Parse options
 while [[ "$1" == -* ]]; do
     case "$1" in
-        --info)     loglevel="info";    shift ;;
-        --warn)     loglevel="warn";    shift ;;
-        --error)    loglevel="error";   shift ;;
-        --debug)    loglevel="debug";   shift ;;
-        --log|--_)  loglevel="log";     shift ;;
-        -l) shift;  loglevel="${1:l}";  shift ;;   # lowercase input
-        -f) shift;  logfile_name="$1";  shift ;;
-        -d) shift;  logdir_name="$1";   shift ;;
-        -v|--verbose)   opt_echo=true;  shift ;;
-        -q|--quiet)     opt_echo=false; shift ;;
-        -s)         opt_skiplog=true;   shift ;;
-        -n)         nl="\n";            shift ;;
-        -t)         tab="\t";           shift ;;
-        -h|--help)  zshlog_usage; return 0 ;;
+        --blue|--orange|--red|--green|--yellow|--magenta|--cyan|--white)
+                        msg_color="${1#--}";    shift ;;
+        --info)         loglevel="info";        shift ;;
+        --warn)         loglevel="warn";        shift ;;
+        --error)        loglevel="error";       shift ;;
+        --debug)        loglevel="debug";       shift ;;
+        --log|--_)      loglevel="log";         shift ;;
+        -l) shift;      loglevel="${1:l}";      shift ;;   # lowercase input
+        -f) shift;      logfile_name="$1";      shift ;;
+        -d) shift;      logdir_name="$1";       shift ;;
+        -c) shift;      msg_color="$1";         shift ;;
+        -v|--verbose)   opt_echo=true;          shift ;;
+        -q|--quiet)     opt_echo=false;         shift ;;
+        -s)             opt_skiplog=true;       shift ;;
+        -n)             nl="\n";                shift ;;
+        -t)             tab="\t";               shift ;;
+        -h|--help)      zshlog_usage;                   return 0 ;;
         *) echo "Invalid option: $1" >&2; zshlog_usage; return 1 ;;
     esac
 done
+
+local msg="$*"                     # plain_msg
+local sender="" message=""
+local msg_color="${msg_color}"
 
 local loglevel="${loglevel:-info}"
 
@@ -74,28 +123,43 @@ local loglevel="${loglevel:-info}"
 
 local leveltag=""
 case "$loglevel" in
-    info)  leveltag="%F{cyan}[INFO]%f" ;;
-    warn)  leveltag="%F{yellow}[WARNING]%f" ;;
-    error) leveltag="%F{red}[ERROR]%f" ;;
-    debug) leveltag="%F{magenta}[DEBUG]%f" ;;
-    *)     leveltag="%F{green}[LOG]%f" ;;
+    info)  leveltag="[%F{cyan} INFO  %f]";      msg_color="${msg_color:-cyan}" ;;
+    warn)  leveltag="[%F{yellow}WARNING%f]";    msg_color="${msg_color:-orange}";;
+    error) leveltag="[%K{red} ERROR %k]";       msg_color="${msg_color:-red}";;
+    debug) leveltag="[%F{magenta} DEBUG %f]";   msg_color="${msg_color:-magenta}";;
+    *)     leveltag="[%F{green}  LOG  %f]";     msg_color="${msg_color:-grey}";;
 esac
 
-local msg="$*"          # plain_msg
-local logdir="${logdir_name:-${ZLOGDLOCAL:-${ZLOGDIR:-${ZDOTDIR:-$HOME/.config/zsh}/logs}}}" logfile
+# Forming the message
+[[ "$msg" =~ ^([A-Za-z0-9\(\)._-]+)[[:space:]]*:(.*)$ ]] && sender="${match[1]}" message="${match[2]##[[:space:]]}" || sender="" message="$msg"
+
+sender="${sender// /}"                  # optional trim of spaces
+# sender="${sender/#$HOME/~}"             # optional shorten home dir
+
+msg=${sender:+<%F{yellow}${sender}%f>: }%F{${msg_color}}${message:-$msg}%f      # available yellow sender, and colored_msg
+
+local logdir="${logdir_name:-${ZLOGDLOCAL:-${ZLOGDIR:-${ZDOTDIR:-$HOME/.config/zsh}/logs}}}" logfile tmp_logfile
 if [[ "$logfile_name" == /* ]]; then
     logfile="$logfile_name"
 else
-    logfile="$logdir/${logfile_name:-${LOGFILE:-zsh.zlog}}"
+    tmp_logfile="${logfile_name:-${LOGFILE:-zsh.zlog}}"
+    logfile="$logdir/${tmp_logfile}"
 fi
 
-local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-local caller="📦 <\e[0;33m${funcstack[2]:-main}\e[0m>"    # a yellow caller!
-mkdir -p "$logdir"
+local timestamp="$(date '+%Y-%m-%d %H:%M:%S')" # file_origin
+local caller_func="$(_getcaller "${2}")"
 
-[[ "$opt_skiplog" == false ]] && \
-    echo "\"$timestamp\",\"$loglevel\",\"$(clean "$caller")\",\"$(clean "$msg")\"" >> "$logfile"
+[[ -n "$ZSH_SUBSHELL" && "$ZSH_SUBSHELL" -gt 0 ]] && caller_func="${caller_func} (subshell)"
+# ==================================
+
+local caller="📦 <%F{yellow}${caller_func}%f>"    # a yellow caller!
+
+mkdir -p "$logdir"
 
 local verbosity="$opt_echo"
 [[ "$verbosity" == "true" || ( -z "$verbosity" && "$ZSHF_VERBOSE" == "true" ) ]] && \
     print -P -- "$nl$tab$leveltag $caller said:: $tab$msg"
+
+[[ "$opt_skiplog" == "false" ]] && {
+    echo "\"$timestamp\",\"$loglevel\",\"$(clean "$caller")\",\"$(clean "$msg")\"" >> "$logfile" ; } || {
+    echo " Failed to write log to file: '$logfile'" >/dev/stderr; }
