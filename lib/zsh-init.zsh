@@ -19,8 +19,11 @@ zsh_add_plugin Aloxaf/fzf-tab
 zsh_add_plugin smnuman/zsh-history-search-end-match
 zsh_add_plugin supercrabtree/k
 
-# Load zsh-completions
+# Load zsh-completions (now in background)
 zsh_add_completion gutils
 zsh_add_completion zsh-users/zsh-completions true
+
+# Apply background completions after shell fully loaded
+(sleep 1; apply_background_completions) &
 
 # ===================
