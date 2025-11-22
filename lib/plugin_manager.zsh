@@ -11,6 +11,9 @@
 local ZLOGDLOCAL=
 local LOGFILE="plugin-manager.zlog"
 
+# Clean start - delete previous session logs
+[[ -f "$ZLOGDIR/$LOGFILE" ]] && rm -f "$ZLOGDIR/$LOGFILE"
+
 # If the function zshlog_usage is not defined, source the file.
 # [[ ! -f zshlog_usage ]] && . "$ZUTILS/zsh-utils.zsh"
 
