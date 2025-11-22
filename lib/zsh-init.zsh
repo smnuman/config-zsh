@@ -23,7 +23,7 @@ zsh_add_plugin supercrabtree/k
 zsh_add_completion gutils
 zsh_add_completion zsh-users/zsh-completions true
 
-# Apply background completions after shell fully loaded
-(sleep 1; apply_background_completions) &
+# Apply background completions after shell fully loaded (suppress job control)
+{ sleep 1; apply_background_completions } &!
 
 # ===================

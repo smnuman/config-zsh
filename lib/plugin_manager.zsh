@@ -84,13 +84,12 @@ zsh_add_file() {
 # === SIMPLE VERSION: Original ChristianChiarulli approach ===
 zsh_add_plugin() {
     PLUGIN_NAME=$(echo $1 | cut -d "/" -f 2)
-    if [ -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ]; then
-        # For plugins
-        zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh" || \
-        zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh"
-    else
+    if [ ! -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ]; then
         git clone "https://github.com/$1.git" "$ZDOTDIR/plugins/$PLUGIN_NAME"
     fi
+    # For plugins
+    zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh" || \
+    zsh_add_file "plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh"
 }
 
 # === COMMENTED OUT: Complex async plugin loading that added overhead ===
@@ -118,21 +117,23 @@ zsh_add_plugin() {
 # Function call: zsh_add_completion <github_repo> <true|false>
 # === BACKGROUND COMPLETION LOADING ===
 zsh_add_completion() {
-    # Schedule completion loading in background
-    (
+    # Schedule completion loading in background (suppress job control messages)
+    {
         PLUGIN_NAME=$(echo $1 | cut -d "/" -f 2)
         if [ ! -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ]; then
             git clone --quiet "https://github.com/$1.git" "$ZDOTDIR/plugins/$PLUGIN_NAME" 2>/dev/null
         fi
 
         if [ -d "$ZDOTDIR/plugins/$PLUGIN_NAME" ]; then
-            completion_file_path=$(ls $ZDOTDIR/plugins/$PLUGIN_NAME/_* 2>/dev/null | head -1)
-            if [ -n "$completion_file_path" ]; then
+            # Check for completion files quietly
+            setopt local_options null_glob
+            completion_files=($ZDOTDIR/plugins/$PLUGIN_NAME/_*)
+            if (( ${#completion_files[@]} > 0 )); then
                 # Signal completion ready
                 echo "$ZDOTDIR/plugins/$PLUGIN_NAME" >> "$ZDOTDIR/.completion_paths" 2>/dev/null
             fi
         fi
-    ) &
+    } &!
 
     # Store for potential immediate compinit
     [ "$2" = true ] && __NEEDS_COMPINIT=true
