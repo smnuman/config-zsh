@@ -1,0 +1,174 @@
+# ------------------------------ source in zshlog -----------------------------
+# ~/.config/zsh/utils/zshlog.core
+# Model B: Lightweight Zsh logging function
+# -----------------------------------------------------------------------------
+
+# Only define once
+[[ -n "${ZSHLOG_CORE_LOADED}" ]] && return
+typeset -g ZSHLOG_CORE_LOADED=true
+
+# ---
+SENDER_LENGTH=65
+CALLER_LENGTH=40
+STAGE_MAX_LEN=12
+# ---
+
+# Helper: Usage message for zshlog
+zshlog_usage() {
+    echo "\n⚠️  Usage: zshlog [--help|-h|-d|--file|-f|-n|-t|-s|--verbose|-v|--quiet|-q|--<color>] <message> [caller_function]\n"
+    echo "    --info        Log level INFO (default)"
+    echo "    --warn        Log level WARN"
+    echo "    --error       Log level ERROR"
+    echo "    --debug       Log level DEBUG (only if ZSH_DEBUG=true)"
+    echo "    --log|--_|-l  Log level LOG (generic)"
+    echo "    --<color>     Specify message color: --blue, --orange, --red, --green, --yellow, --magenta, --cyan, --white"
+    echo "    -c            Specify message color (same as --<color>) like: -c red"
+    echo "    -d            Specify a log directory name (default: ~/.config/zsh/logs)"
+    echo "    -f|--file     Specify a log file name (default: zsh.zlog in log directory)"
+    echo "    -n            Add a newline before & after message"
+    echo "    -t            Add a tab before message"
+    echo "    -s            Skip logging in log-file (print only)"
+    echo "    --verbose     Force verbosity ON (echo)"
+    echo "    -v=true       Manual verbosity ON (echo)"
+    echo "    --quiet|-q    Force verbosity OFF (quiet mode logging)"
+    echo ""
+}
+
+# One-liner: Strip ANSI colour codes like \e[31m, \e[0;33m, etc.
+clean() { echo "$1" | sed -E 's/\x1B\[[0-9;]*m//g' | sed -E 's/%F\{[^}]*\}//g; s/%K\{[^}]*\}//g; s/%f//g; s/%k//g' | perl -CSDA -pe 's/[\x{1F300}-\x{1FAFF}\x{2600}-\x{26FF}]//gu'; }
+
+# # Full-step multiline: Strip ANSI escape codes, Zsh prompt formatting, and emoji
+# clean() {
+#     echo "$1" | \
+#         # Remove ANSI escape codes
+#         sed -E 's/\x1B\[[0-9;]*m//g' | \
+#         # Remove Zsh prompt formatting: %F{color}, %K{color}, %f, %k
+#         sed -E 's/%F\{[^}]*\}//g; s/%K\{[^}]*\}//g; s/%f//g; s/%k//g' | \
+#         # Remove emoji (unicode ranges)
+#         perl -CSDA -pe 's/[\x{1F300}-\x{1FAFF}\x{2600}-\x{26FF}]//gu'
+# }
+
+# Call: __parse_msg "$msg"
+# Sets global (or local) variables: sender, message
+__parse_msg() {
+    local msg="$1"
+    # Max allowable stage length
+    : ${STAGE_MAX_LEN:=12}
+
+    local rexp1="^([A-Za-z0-9()._-]+:[[:space:]]+[[:alnum:]-]{1,$STAGE_MAX_LEN})[[:space:]]*--[[:space:]]*(.*)$"
+    local rexp2="^([A-Za-z0-9()._-]+)[[:space:]]*:(.*)$"
+
+    if [[ "$msg" =~ $rexp1 ]]; then
+        sender="${match[1]}"
+        message="${match[2]}"
+    elif [[ "$msg" =~ $rexp2 ]]; then
+        sender="${match[1]}"
+        message="${match[2]##[[:space:]]}"
+    else
+        sender=""
+        message="$msg"
+    fi
+
+}
+
+# --- Main zshlog function ---
+zshlog() {
+    local opt_echo="" opt_skiplog=false tab="" nl=""
+
+    # Argument Parse options
+    while [[ "$1" == -* ]]; do
+        case "$1" in
+            --blue|--orange|--red|--green|--yellow|--magenta|--cyan|--white)
+                            msg_color="${1#--}";    shift ;;
+            --info)         loglevel="info";        shift ;;
+            --warn)         loglevel="warn";        shift ;;
+            --error)        loglevel="error";
+                            opt_echo=true;          shift ;;    # Errors are always echoed
+            --debug)        loglevel="debug";       shift ;;
+            --log|--_)      loglevel="log";         shift ;;
+            -l) shift;      loglevel="${1:l}";      shift ;;    # lowercase input
+            -f) shift;      logfile_name="$1";      shift ;;
+            -d) shift;      logdir_name="$1";       shift ;;
+            -c) shift;      msg_color="$1";         shift ;;
+            -v=*)           local vvar="${1#-v=}"; [[ -z "$vvar" ]] && { print -u2 "zshlog(${funcstack[3]:-main}:$line): -v requires an intentional value <true>";  return 1 ; };
+                            opt_echo="${(P)vvar:-false}";
+                                                    shift ;;
+            --verbose)      opt_echo=true;          shift ;;
+            -q|--quiet)     opt_echo=false;         shift ;;
+            -s)             opt_skiplog=true;       shift ;;
+            -n)             nl="\n";                shift ;;
+            -t)             tab="\t";               shift ;;
+            -h|--help)      zshlog_usage;                   return 0 ;;
+            *) print -P "Invalid option: %F{$fg[grey]}$1%f" >&2; zshlog_usage; return 1 ;;
+        esac
+    done
+
+    local msg="$*"                     # plain_msg
+    local sender="" message=""
+    local msg_color="${msg_color}"
+
+    local loglevel="${loglevel:-info}"
+
+    [[ "$loglevel" == "debug" && "$ZSH_DEBUG" != "true" ]] && return
+
+    local leveltag=""
+    case "$loglevel" in
+        info)  leveltag="[%F{cyan} INFO  %f]";      msg_color="${msg_color:-cyan}" ;;
+        warn)  leveltag="[%F{yellow}WARNING%f]";    msg_color="${msg_color:-orange}";;
+        error) leveltag="[%K{red} ERROR %k]";       msg_color="${msg_color:-red}";;
+        debug) leveltag="[%F{magenta} DEBUG %f]";   msg_color="${msg_color:-magenta}";;
+        *)     leveltag="[%F{green}  LOG  %f]";     msg_color="${msg_color:-grey}";;
+    esac
+
+    __parse_msg "$msg"    # see below
+
+    msg=${sender:+<%F{yellow}${sender}%f>: }%F{${msg_color}}${message:-$msg}%f      # available yellow sender, and colored_msg
+
+    local logdir="${logdir_name:-${ZLOGDLOCAL:-${ZLOGDIR:-${ZDOTDIR:-$HOME/.config/zsh}/logs}}}" logfile tmp_logfile
+    if [[ "$logfile_name" == /* ]]; then
+        logfile="$logfile_name"
+    else
+        tmp_logfile="${logfile_name:-${LOGFILE:-zsh.zlog}}"
+        logfile="$logdir/${tmp_logfile}"
+    fi
+
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')" # file_origin
+
+    local caller_func file line CALLER_FUNC_LENGTH
+
+    caller_func="${funcstack[3]:-main}"
+    CALLER_FUNC_LENGTH=$(( ${CALLER_LENGTH:-20} - ${#caller_func} ))
+
+    # funcfiletrace[1] = call site of zshlog
+    if [[ -n "${funcfiletrace[2]}" ]]; then
+        file="${funcfiletrace[2]%%:*}"
+        line="${funcfiletrace[2]#*:}"
+    else
+        file="${(%):-%N}"
+        line=""
+    fi
+
+    # Format caller
+    if [[ -n "$line" ]]; then
+        caller_func="${caller_func:t}$(printf '%*s' $(( 20 - ${#caller_func} )) '') (${file:t}:${line})"
+    else
+        caller_func="${caller_func} (${file:t})"
+    fi
+
+    # --- End inline caller resolution ---
+    [[ -n "$ZSH_SUBSHELL" && "$ZSH_SUBSHELL" -gt 0 ]] && caller_func="${caller_func} (subshell)"
+
+    local   caller="📦 <%F{yellow}${caller_func}%f>"                                            # a yellow caller!
+            caller="${caller}$(printf '%*s' $(( ${SENDER_LENGTH:-65} - ${#caller} )) '')"       # pad to 65 chars
+
+    mkdir -p "$logdir"
+
+    local verbosity="${opt_echo:-${ZSH_USER_VERBOSE:-${ZSHF_VERBOSE:-"false"}}}"
+
+    [[ "$verbosity" == "true" ]] && {
+        print -P -- "$nl$tab$leveltag $caller said:: $tab$msg" ; }
+
+    [[ "$opt_skiplog" == "false" ]] && {
+        echo "\"$timestamp\",\"$loglevel\",\"$(clean "$caller")\",\"$(clean "$msg")\"" >> "$logfile" ; }
+
+}
