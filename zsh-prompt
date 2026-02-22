@@ -1,8 +1,16 @@
-PROMPT_UTILS="$ZDOTDIR/prompt/prompt-utils.zsh"
-PROMPT_INIT="$ZDOTDIR/prompt/prompt-init.zsh"
-PROMPT_GIT="$ZDOTDIR/prompt/prompt-git-status.zsh"
+#!/usr/bin/env zsh
+
+ZPROMPT_DIR="$ZDOTDIR/prompt"
+
+PROMPT_DEFAULTS="$ZPROMPT_DIR/prompt-defaults"
+PROMPT_RC="${XDG_CONFIG_HOME:-$HOME/.config}/.promptrc"
+PROMPT_UTILS="$ZPROMPT_DIR/prompt-utils.zsh"
+PROMPT_INIT="$ZPROMPT_DIR/prompt-init.zsh"
+PROMPT_GIT="$ZPROMPT_DIR/prompt-git-status.zsh"
 
 if [[ -f $PROMPT_UTILS && -f $PROMPT_INIT && -f $PROMPT_GIT ]]; then
+    source $PROMPT_DEFAULTS                             # immutable baseline — always loads
+    [[ -f $PROMPT_RC ]] && source $PROMPT_RC             # user overrides via ~/.config/.promptrc
     source $PROMPT_UTILS
     source $PROMPT_GIT
     source $PROMPT_INIT
