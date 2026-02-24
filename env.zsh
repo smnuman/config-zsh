@@ -14,7 +14,7 @@ export ZSHF_VERBOSE="false"                      # function verbosity
 export ZSH_DEBUG_BOOT="true"                   # boot debug logs
 export ZSH_PERF_MODE="${ZSH_PERF_MODE:-true}"    # performance mode for faster boots
 
-export GIT_PROVIDER="gitlab"                    # "github" or "gitlab" (default: github)
+export GIT_PROVIDER="github"                    # "github" or "gitlab" (default: github)
 
 [[ -z "$ZUTILS" ]] && ZUTILS="$HOME/.config/zsh/utils"
 export ZUTILS
