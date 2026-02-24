@@ -1,0 +1,181 @@
+#!/usr/bin/env zsh
+# opencode-restart — Restart opencode with optional session continuation
+#
+# Usage:
+#   opencode-restart              # Fresh session in current directory
+#   opencode-restart continue     # Continue last session
+#   opencode-restart -s <id>      # Continue specific session
+#   opencode-restart -h | --help  # Show help
+#
+# Before restarting, checks if the current directory is a git repo with
+# uncommitted work. If so, warns the user to run /gitop:end or save work
+# before proceeding.
+
+set -euo pipefail
+
+# ─── Colors ───────────────────────────────────────────────────────────
+_oc_info()  { print -P "%F{cyan}▸%f $1"; }
+_oc_warn()  { print -P "%F{yellow}▸%f $1"; }
+_oc_err()   { print -P "%F{red}✗%f $1"; }
+_oc_ok()    { print -P "%F{green}✓%f $1"; }
+
+# ─── Help ─────────────────────────────────────────────────────────────
+_oc_help() {
+    cat <<'HELP'
+opencode-restart — Restart opencode (quit + relaunch)
+Usage:
+  opencode-restart                Fresh session in current directory
+  opencode-restart continue       Continue the last session
+  opencode-restart -s <session>   Continue a specific session
+  opencode-restart -h | --help    Show this help
+Before restarting, the script checks for uncommitted git work and
+warns you to save progress (e.g., via /gitop:up or /gitop:end).
+HELP
+}
+
+# ─── Git safety check ────────────────────────────────────────────────
+_oc_check_git() {
+    # Not a git repo? Nothing to check.
+    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+        return 0
+    fi
+
+    local dirty=""
+
+    # Check for uncommitted changes (staged + unstaged + untracked)
+    if ! git diff --quiet 2>/dev/null; then
+        dirty="unstaged changes"
+    elif ! git diff --cached --quiet 2>/dev/null; then
+        dirty="staged changes"
+    elif [[ -n "$(git ls-files --others --exclude-standard 2>/dev/null)" ]]; then
+        dirty="untracked files"
+    fi
+
+    if [[ -z "$dirty" ]]; then
+        return 0
+    fi
+
+    # Check if on a feature branch (not main/master)
+    local branch
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+
+    _oc_warn "Git repo detected with $dirty (branch: ${branch:-detached})"
+
+    if [[ "$branch" == "main" || "$branch" == "master" ]]; then
+        _oc_warn "You're on a protected branch. Consider creating a feature branch first."
+    fi
+
+    _oc_warn "Consider running /gitop:up to save progress before restarting."
+    print ""
+
+    # Ask user to confirm
+    local reply
+    print -n "%F{yellow}▸%f Proceed with restart anyway? [y/N] "
+    read -q reply
+    print ""  # newline after read -q
+
+    if [[ "$reply" != "y" ]]; then
+        _oc_info "Restart cancelled. Save your work first."
+        return 1
+    fi
+
+    return 0
+}
+
+# ─── Find and kill opencode ──────────────────────────────────────────
+_oc_find_pid() {
+    # Find opencode process for the current project directory
+    local project_dir="${PWD}"
+    # opencode runs as a single process; find it
+    pgrep -f "opencode.*${project_dir}" 2>/dev/null || pgrep -x opencode 2>/dev/null || echo ""
+}
+
+# ─── Main ─────────────────────────────────────────────────────────────
+main() {
+    local mode="fresh"
+    local session_id=""
+
+    # Parse arguments
+    case "${1:-}" in
+        -h|--help)
+            _oc_help
+            return 0
+            ;;
+        continue)
+            mode="continue"
+            ;;
+        -s)
+            if [[ -z "${2:-}" ]]; then
+                _oc_err "Missing session ID. Usage: opencode-restart -s <session-id>"
+                return 1
+            fi
+            mode="session"
+            session_id="$2"
+            ;;
+        "")
+            mode="fresh"
+            ;;
+        *)
+            _oc_err "Unknown argument: $1"
+            _oc_help
+            return 1
+            ;;
+    esac
+
+    # Verify opencode is installed
+    if ! command -v opencode &>/dev/null; then
+        _oc_err "opencode not found in PATH"
+        return 1
+    fi
+
+    # Git safety check — warn about uncommitted work
+    _oc_check_git || return 1
+
+    local project_dir="${PWD}"
+
+    # Build the relaunch command
+    local -a relaunch_cmd=(opencode "$project_dir")
+    case "$mode" in
+        continue)
+            relaunch_cmd+=(--continue)
+            _oc_info "Will continue last session"
+            ;;
+        session)
+            relaunch_cmd+=(--session "$session_id")
+            _oc_info "Will continue session: $session_id"
+            ;;
+        fresh)
+            _oc_info "Will start fresh session"
+            ;;
+    esac
+
+    # Find running opencode processes
+    local oc_pids
+    oc_pids=$(_oc_find_pid)
+
+    if [[ -n "$oc_pids" ]]; then
+        _oc_info "Stopping opencode (PID: ${oc_pids})..."
+        # Graceful SIGTERM first, then SIGKILL after 3 seconds
+        echo "$oc_pids" | xargs kill -TERM 2>/dev/null || true
+        sleep 1
+
+        # Check if still running
+        if echo "$oc_pids" | xargs kill -0 2>/dev/null; then
+            _oc_warn "Process still alive, sending SIGKILL..."
+            echo "$oc_pids" | xargs kill -KILL 2>/dev/null || true
+            sleep 0.5
+        fi
+        _oc_ok "Stopped"
+    else
+        _oc_info "No running opencode process found"
+    fi
+
+    # Small delay to ensure port/lock release
+    sleep 0.5
+
+    # Relaunch
+    _oc_ok "Launching: ${relaunch_cmd[*]}"
+    exec "${relaunch_cmd[@]}"
+}
+
+main "$@"
