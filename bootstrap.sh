@@ -145,14 +145,31 @@ zsh_aliases_transform() {
     cat
     return
   fi
-  sed \
-    -e '/^alias usage=/s/ifconfig wlan0 | grep .bytes./ip -s link/' \
-    -e '/^alias localip=/s|ipconfig getifaddr en0|hostname -I 2>/dev/null | awk '"'"'{print \$1}'"'"'|' \
-    -e '/^alias flushdns=/s/.*/# alias flushdns removed — not applicable on Linux/' \
-    -e '/^alias connections=/s/^/# [disabled on Linux] /' \
-    -e '/^alias ports=/s/^/# [disabled on Linux] /' \
-    -e '/^alias myip=/!b;c\alias myip='"'"'curl -s ifconfig.me'"'" \
-    | sed '/^[[:space:]]*$/d'
+  while IFS= read -r line; do
+    case "$line" in
+      'alias usage='*)
+        echo "alias usage='ip -s link'"
+        ;;
+      'alias localip='*)
+        echo "alias localip='hostname -I 2>/dev/null'"
+        ;;
+      'alias flushdns='*)
+        echo "# alias flushdns removed — not applicable on Linux"
+        ;;
+      'alias connections='*)
+        echo "# [disabled on Linux] $line"
+        ;;
+      'alias ports='*)
+        echo "# [disabled on Linux] $line"
+        ;;
+      'alias myip='*)
+        echo "alias myip='curl -s ifconfig.me'"
+        ;;
+      *)
+        [[ -n "$line" ]] && echo "$line"
+        ;;
+    esac
+  done
 }
 
 # zsh-exports: remove brew paths, adapt LSCOLORS
@@ -192,11 +209,20 @@ zsh_fuzzy_transform() {
   if [[ "$PLATFORM" == "macos" ]]; then
     cat
   else
-    # Replace brew-based fzf path with linux paths
-    # Try /usr/share/doc/fzf (Debian/Ubuntu) then /usr/share/fzf (Arch)
-    sed \
-      -e '/fzf_prefix=/s|.*|  local fzf_prefix="/usr/share/doc/fzf"\
-  [[ -d "$fzf_prefix" ]] || fzf_prefix="/usr/share/fzf"|'
+    while IFS= read -r line; do
+      case "$line" in
+        *'fzf_prefix='*)
+          echo '  local fzf_prefix="/usr/share/doc/fzf"'
+          echo '  [[ -d "$fzf_prefix" ]] || fzf_prefix="/usr/share/fzf"'
+          ;;
+        *'fzf --zsh'*)
+          echo '  command -v fzf &>/dev/null && fzf --zsh 2>/dev/null && eval "$(fzf --zsh 2>/dev/null)" || true'
+          ;;
+        *)
+          echo "$line"
+          ;;
+      esac
+    done
   fi
 }
 
@@ -427,19 +453,47 @@ init_submodules() {
     return 0
   fi
 
-  info "Initializing git submodules (prompt, git-utils)..."
+  info "Initializing git submodules..."
 
   if [[ "$DRY_RUN" == "true" ]]; then
-    info "[dry-run] would run: git submodule update --init --recursive"
+    info "[dry-run] would init submodules and copy them to $ZDOTDIR"
     return 0
   fi
 
-  # If repo is cloned to ZDOTDIR, submodules live inside ZDOTDIR
-  if [[ -d "$REPO_DIR/.git" ]]; then
-    (cd "$REPO_DIR" && git submodule update --init --recursive 2>/dev/null) && \
-      ok "Submodules initialized" || \
-      warn "Submodule init failed (check network or SSH keys)"
+  if [[ ! -d "$REPO_DIR/.git" ]]; then
+    warn "Not a git repo — skipping submodule init"
+    return 0
   fi
+
+  # Init and checkout submodules inside the repo (try SSH, fall back to HTTPS)
+  if ! (cd "$REPO_DIR" && git submodule update --init --recursive 2>/dev/null); then
+    # SSH might not be configured; try HTTPS as fallback
+    local submod_url
+    while IFS= read -r sub_url; do
+      sub_url="${sub_url/#git@github.com:/https:\/\/github.com\/}"
+      sub_url="${sub_url/%.git/}"
+      local sub_name
+      sub_name=$(basename "$sub_url")
+      local sub_dst="$REPO_DIR/$(grep -B1 "$sub_name" "$REPO_DIR/.gitmodules" | grep path | awk '{print $3}')"
+      if [[ -n "$sub_dst" && ! -d "$sub_dst" ]]; then
+        git clone --depth=1 "$sub_url" "$sub_dst" 2>/dev/null
+      fi
+    done < <(grep url "$REPO_DIR/.gitmodules" | awk '{print $3}')
+  fi
+
+  # Copy submodule content to ZDOTDIR
+  while IFS= read -r sub_path; do
+    local src_sub="$REPO_DIR/$sub_path"
+    local dst_sub="$ZDOTDIR/$sub_path"
+
+    if [[ -d "$src_sub" && ! -d "$dst_sub" ]]; then
+      mkdir -p "$(dirname "$dst_sub")"
+      cp -a "$src_sub" "$dst_sub"
+      ok "Installed submodule: $sub_path"
+    elif [[ -d "$src_sub" && -d "$dst_sub" ]]; then
+      info "Submodule already exists: $sub_path (skipping)"
+    fi
+  done < <(grep -E 'path = ' "$REPO_DIR/.gitmodules" | awk '{print $3}')
 }
 
 # ─── Install Dependencies ─────────────────────────────────────
