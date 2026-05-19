@@ -31,3 +31,4 @@ setopt HIST_BEEP                # Audible feedback on failed history search
 # === Prompt Substitution ===
 setopt prompt_subst             # Allow $(...) in PROMPT
 setopt prompt_cr                # Move to new line after prompt if wrapped
+setopt prompt_percent           # Allow literal % in prompt with %%

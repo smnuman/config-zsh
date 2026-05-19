@@ -10,7 +10,7 @@
 export_path() {
     local dir="$1" dirprint dirlength=0 sender
     local caller_info="${2:-${${(%):-%x}:-MAIN}}"   # caller info passed in
-    caller_info="${caller_info//$HOME/~}"
+            caller_info="${caller_info//$HOME/~}"
     local log_file="$ZLOGDIR/pathlog.zlog"
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
     # local before="$PATH"
@@ -35,7 +35,7 @@ export_path() {
 
     for existing in ${(s/:/)PATH}; do
         [[ "$existing" == "$dir" ]] && {
-            echo "export_path: ⚠️   Skipped: $dir already in PATH"
+            [[ "$ZSH_PATH_DEBUG" == "true" ]] && echo "export_path: ⚠️   Skipped: $dir already in PATH (called by ${caller_info})"
             echo "[$timestamp] :$sender: ⚠️   Already present: $dirprint (called by ${caller_info})" >> "$log_file"
             return
         }
@@ -70,6 +70,7 @@ _export_with_log() {
 
     # Call the real export for everything else if there are arguments
     [[ $# -gt 0 ]] && builtin export "$@"
+    return 0
 }
 
 # Usage e.g.: dedup_path()

@@ -1,15 +1,15 @@
-# --- Initialise fzf and zoxide ---
-# if command -v fzf >/dev/null 2>&1; then
 if (( $+commands[fzf] )); then
-  local fzf_prefix=${$(brew --prefix 2>/dev/null):-/usr/local}/opt/fzf
+  local fzf_prefix=""
+  if [[ "$ZSH_PLATFORM" == "macos" ]] && (( $+commands[brew] )); then
+    fzf_prefix="$(brew --prefix)/opt/fzf"
+  fi
+  [[ -z "$fzf_prefix" || ! -d "$fzf_prefix" ]] && fzf_prefix="/usr/share/doc/fzf"
+  [[ -d "$fzf_prefix" ]] || fzf_prefix="/usr/share/fzf"
   for fzf_source in ~/.fzf/shell "$fzf_prefix/shell"; do
     [[ -f "$fzf_source/completion.zsh" ]] && . "$fzf_source/completion.zsh"
     [[ -f "$fzf_source/key-bindings.zsh" ]] && . "$fzf_source/key-bindings.zsh"
   done
-  # Initialize fzf for zsh
-  eval "$(fzf --zsh)"
+  eval "$(fzf --zsh 2>/dev/null)" || true
 fi
 
-# Initialise zoxide for zsh
 command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
-# =====================================================
