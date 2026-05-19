@@ -1,8 +1,5 @@
 #!/usr/bin/env zsh
 
-# Usage e.g.:
-# brew_log_summary              # --- Current month
-# brew_log_summary 2025-06      # --- June 2025
 brew_log_summary() {
     local logdir="$BREWDOTS/logs"
     local month="${1:-$(date +%Y-%m)}"
@@ -17,9 +14,6 @@ brew_log_summary() {
         | sort | uniq -c | sort -nr
 }
 
-# clear_brew_logs() {
-#     : > "$BREWDOTS/logs/brew-activity.log" && echo "✅ Cleared brew logs."
-# }
 clear_brew_logs() {
     local ts=$(date +%Y-%m-%d_%H-%M-%S)
     local log="$BREWDOTS/logs/brew-activity.log"

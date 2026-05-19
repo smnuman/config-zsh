@@ -38,7 +38,7 @@ function set-cursor-shape {
       blinking-block)   print -n -- '\ePtmux;\e\E[2 q\e\\';;
       default)          print -n -- '\ePtmux;\e\E[2 q\e\\';;
     esac
-  elif [[ $TERM == "iterm"* || $TERM == "xterm"* || $TERM == "vte"* || $TERM == "alacritty" ]]; then
+  elif [[ $TERM == "xterm"* || $TERM == "xterm"* || $TERM == "vte"* || $TERM == "alacritty" ]]; then
     # iTerm2, xterm, VTE-based (GNOME Terminal), Alacritty
     case $shape in
       beam)             print -n -- '\e[5 q';;

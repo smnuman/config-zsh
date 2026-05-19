@@ -19,17 +19,13 @@ export LSG_OPTIONS=' -aGgo'
 export EZA_CONFIG_DIR="$XDG_CONFIG_HOME/eza"  # eza config dir
 
 # For compilers to find curl you may need to set:
-export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
+# [disabled on Linux] export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
+# [disabled on Linux] export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
 
-export HOMEBREW_INSTALL_BADGE="☕️ 🐸"
-export HOMEBREW_INSTALL_BADGE_COLOR="green"
 
 export ZSH_HISTORY_SEARCH_STYLE="bashlike"  # Cursor at end (default), or use "zshlike"
 
-export_path "$BREWDOTS"
 export_path "$ZUTILS"
-export_path "$BRUTILS"
 export_path "$ZDOTDIR/git-utils/"
 export_path "$XDG_CONFIG_HOME/tmux/scripts/"
 export_path "$XDG_CONFIG_HOME/tmux/plugins/tpm/bin/"
