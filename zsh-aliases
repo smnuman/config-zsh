@@ -48,19 +48,24 @@ alias -- -='cd -'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 alias .....='cd ../../../..'
-# ---
+# --- logs and docs ---
 alias zlog='tail -n 20 "$ZLOGDIR/$ZLOGFILE"'
 alias pluglog='tail -n 20 "$ZLOGDIR/plugin-update.log"'
 alias brewlog='tail -n 20 "$BREWDOTS/logs/brew-activity.log"'
 alias brewlogall='more "$BREWDOTS/logs/brew-activity.log"'
 # Quick open PATH Legend
 alias path-legend="code ~/.config/docs/PATH-legend.md"
-# ---
+# --- git helpers for prompt ---
+alias gm='git switch main && git pull'
+alias gnb='git switch -c'
+alias gl='git log --oneline --graph --decorate --all'
+# alias gs='git status'
 alias gs='read BEHIND AHEAD <<< "$(git rev-list --left-right --count @{u}...HEAD 2>/dev/null || echo "0 0")"; echo "📊 Ahead: $AHEAD, Behind: $BEHIND"'
 # alias gsync='git fetch --all && gsync-status'
 # alias gsync-pull='git fetch --all && git pull --rebase'
 # alias gsync-push='git fetch --all && git push'
 # alias grepo='f() { git init && git remote add origin "git@github.com:smnuman/$(basename $PWD).git" && git add . && git commit -m "${1:-Initial commit}" && git push -u origin master; }; f'
+alias gfetch='git fetch origin && git rebase origin/main'
 # ---
 alias path='echo ${PATH//:/\\n}'
 # alias path='echo "$PATH" | tr ":" "\n"'

@@ -41,8 +41,10 @@ zsh_bootlog "Phase 6: configuring git (async)"
   [[ ! -f ~/.gitconfig ]] && ln -s ~/.config/git/gitconfig ~/.gitconfig 2>/dev/null
   [[ -f "$ZDOTDIR/lib/zsh-initgit.zsh" ]] && source "$ZDOTDIR/lib/zsh-initgit.zsh"
 } >> "$ZLOGDIR/boot_async_git.zlog" 2>&1 &!
-
+#  --- git utilities ---
 [[ -f "$ZDOTDIR/git-utils/git_users.zsh" ]] && source "$ZDOTDIR/git-utils/git_users.zsh"
+#  --- git workflow ---
+[[ -f "$ZDOTDIR/git-utils/gw.zsh" ]] && source "$ZDOTDIR/git-utils/gw.zsh"
 
 zsh_bootlog "Phase 7: loading plugin manager"
 zprof_start "plugins"
@@ -58,9 +60,9 @@ zprof_start "modules"
 # === Module Loader (aliases, exports, functions, completions) ===
 [[ -f "$ZDOTDIR/lib/zsh-init.zsh" ]] && source "$ZDOTDIR/lib/zsh-init.zsh"
 
-# Buil-in Prompt themes
-autoload -Uz promptinit && promptinit 
-prompt bart 
+# # Buil-in Prompt themes
+# autoload -Uz promptinit && promptinit 
+# prompt bart 
 
 zprof_end "modules"
 
@@ -112,3 +114,6 @@ zprof_end "TOTAL"
 
 # === Profile dump ===
 zprof_report
+
+# OpenClaw Completion
+source "/home/numan/.openclaw/completions/openclaw.zsh"

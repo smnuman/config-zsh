@@ -2,16 +2,6 @@
 # completion list keybindings and settings
 # ~/.config/zsh/zsh-complist
 
-# --- History Search Keybindings ---
-autoload -U up-line-or-beginning-search down-line-or-beginning-search
-zle -N up-line-or-beginning-search
-zle -N down-line-or-beginning-search
-bindkey '^[[A' up-line-or-beginning-search        # Ctrl+P: search history backward (up)
-bindkey '^[[B' down-line-or-beginning-search      # Ctrl+N: search history forward (down)
-bindkey '^R' history-incremental-search-backward    # Use Ctrl+R to search history
-#  if below is present, must add `stty -ixon` to .zshrc before 
-# bindkey '^S' history-incremental-search-forward     # Use Ctrl+S to search history forward (if terminal supports it)
-
 
 # --- Completion Menu Configuration ---
 zmodload -i zsh/complist                        # Load completion list module quietly
