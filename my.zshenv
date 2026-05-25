@@ -13,11 +13,11 @@ export LC_ALL="en_US.UTF-8"
 umask 022                                       # Default: 755 for dirs, 644 for files
 
 export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
-
-export DPRINT_INSTALL="$HOME/.dprint"           # === DPRINT Install Directory ===
+export XDG_BIN_HOME="$HOME/.local/bin"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_RUNTIME_DIR="/run/user/$EUID"
 
 export ZDOTDIR="$HOME/.config/zsh"              # === ZDOTDIR (my dotfiles home) ===
 export ZLOGDIR="$HOME/.config/zsh/logs"         # === ZSH Log Directory (general logs) ===

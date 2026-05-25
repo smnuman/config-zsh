@@ -11,7 +11,7 @@ export ZSHENV_DEBUG="false"
 export ZSH_PATH_DEBUG="false"               # used in pathtools.zsh to toggle path export debug logs
 export ZSHF_VERBOSE="false"
 export ZSH_DEBUG_BOOT="false"
-export ZSH_PROFILE="true"
+export ZSH_PROFILE="false"
 
 export GIT_PROVIDER="github"
 
@@ -19,11 +19,14 @@ export ZSHLIB="${ZDOTDIR}/lib"
 
 export ZUTILS="$HOME/.config/zsh/utils"
 
-export PATH="$ZUTILS:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH="$XDG_BIN_HOME:$ZUTILS:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 export PATH=$HOME/.opencode/bin:$PATH   # opencode
 
+export DPRINT_INSTALL="$HOME/.dprint"           # === DPRINT Install Directory ===
 export PATH="$DPRINT_INSTALL/bin:$PATH"
+
+export PATH="$HOME/.bun/bin:$PATH"      # bun + globals (openclaw, omc, omc-cli, oh-my-claudecode, qmd, agent-browser, bunx)
 
 [[ "$ZSH_DEBUG_BOOT" == "true" ]] && print -P "%F{yellow}ZSH Boot Debug Active — logs at $ZLOGDIR/boot.zlog%f"
 
@@ -58,8 +61,11 @@ setopt prompt_subst
 # === Computed ===
 export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no-color" || grep --color=never "" /dev/null >/dev/null 2>&1 && echo "--color=never" || echo "")
 
-[[ "$ZSHENV_DEBUG" == "true" ]] && "${ZUTILS}"/zshenv_report
+# # === Terminal Title Management (OpenClaw) ===
+# [[ -f "$ZUTILS/zsh-title.zsh" ]] && source "$ZUTILS/zsh-title.zsh"
 
 zprof_end ".env.zsh"
+
+[[ "$ZSHENV_DEBUG" == "true" ]] && "${ZUTILS}"/zshenv_report
 
 zsh_bootlog "Phase 2: env.zsh completed"

@@ -14,7 +14,6 @@ if [[ -f $PROMPT_UTILS && -f $PROMPT_INIT && -f $PROMPT_GIT_STAT ]]; then
     source $PROMPT_DEFAULTS 
     source $PROMPT_UTILS
     source $PROMPT_INIT
-    print -P "%F{green}zsh-prompt loaded successfully%f"
 else
     export PS1="[ %T ] %~ %# "
 fi
