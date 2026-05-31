@@ -39,7 +39,8 @@ alias lo="logout"       # logout from current shell session
 alias 't~'='() { tree -a -L "${1:-1}" --gitignore --dirsfirst -I "Documents|Downloads|Applications|Music|Movies|Pictures|Library|.git" "${2:-.}"; }'
 # ---
 alias c='clear'         # Clear the terminal screen
-alias s='source ~/.config/zsh/.zshrc'           # source .zshrc
+# alias s='source ~/.config/zsh/.zshrc'           # source .zshrc
+alias s='source ~/.config/zsh/.zshrc && hash -r && echo "\n\t===== new zsh sourced =====\n" || echo "\nxxxxx Failed sourcing new zsh xxxxx\n"'
 alias sd='ZSH_DEBUG_BOOT=true exec zsh'         # source .zshrc with debug
 alias v='nvim -c "colorscheme vim"'             # alias for nvim
 alias which='type -a'   # Show all locations of a command
