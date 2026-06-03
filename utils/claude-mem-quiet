@@ -1,0 +1,39 @@
+# == 🔇 claude-mem Context Verbosity Toggle ==
+# Suppresses verbose session-start context output from the claude-mem plugin
+# by setting the four CLAUDE_MEM_CONTEXT_SHOW_* env vars read by worker-service.cjs.
+# Cache file to remember last mode
+CLAUDE_MEM_MODE_CACHE="${HOME}/.cache/claude_mem_context_mode"
+
+# Ensure cache folder exists
+mkdir -p "$(dirname "$CLAUDE_MEM_MODE_CACHE")"
+
+# Apply previous mode if cache exists
+if [[ -f "$CLAUDE_MEM_MODE_CACHE" ]]; then
+    mode=$(<"$CLAUDE_MEM_MODE_CACHE")
+    if [[ "$mode" == "quiet" ]]; then
+        export CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS=false
+        export CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS=false
+        export CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY=false
+        export CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE=false
+    fi
+fi
+
+# Function to toggle mode
+toggle_claude_mem_quiet() {
+    if [[ "${CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS}" == "false" ]]; then
+        unset CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS
+        unset CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS
+        unset CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY
+        unset CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE
+        echo "verbose" > "$CLAUDE_MEM_MODE_CACHE"
+        echo "🔊 claude-mem context restored — relaunch claude to apply."
+    else
+        export CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS=false
+        export CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS=false
+        export CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY=false
+        export CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE=false
+        echo "quiet" > "$CLAUDE_MEM_MODE_CACHE"
+        echo "🔇 claude-mem context suppressed — relaunch claude to apply."
+    fi
+}
+alias memquiet='toggle_claude_mem_quiet'
