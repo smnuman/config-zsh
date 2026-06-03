@@ -162,6 +162,8 @@ local verbosity="$opt_echo"
 [[ "$verbosity" == "true" || ( -z "$verbosity" && "$ZSHF_VERBOSE" == "true" ) ]] && \
     print -P -- "$nl$tab$leveltag $caller said:: $tab$msg"
 
-[[ "$opt_skiplog" == "false" ]] && {
-    echo "\"$timestamp\",\"$loglevel\",\"$(clean "$caller")\",\"$(clean "$msg")\"" >> "$logfile" ; } || {
-    echo " Failed to write log to file: '$logfile'" >/dev/stderr; }
+if [[ "$opt_skiplog" == "true" ]]; then
+    : # -s: logging intentionally skipped (print-only); not an error
+elif ! { echo "\"$timestamp\",\"$loglevel\",\"$(clean "$caller")\",\"$(clean "$msg")\"" >> "$logfile" } 2>/dev/null; then
+    echo "zshlog: failed to write log to '$logfile'" >&2
+fi
