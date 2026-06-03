@@ -103,6 +103,9 @@ zprof_start "overrides"
 # === history-toggle (shared/private history mode) ===
 [[ -f "$ZUTILS/history-toggle" ]] && source "$ZUTILS/history-toggle"
 
+# === claude-mem-quiet (verbose/quiet session-start context) ===
+[[ -f "$ZUTILS/claude-mem-quiet" ]] && source "$ZUTILS/claude-mem-quiet"
+
 # === Local overrides (gitignored) ===
 [[ -f "$ZDOTDIR/.zshrc.local" ]] && source "$ZDOTDIR/.zshrc.local"
 
