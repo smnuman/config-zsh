@@ -37,6 +37,9 @@ alias eza-theme='() {
 }'
 alias eza-themes='ls -1 "$HOME/.config/eza/eza-themes/themes/" | sed "s/\.yml$//"'
 
+alias clawstart="pkill -f "openclaw-gateway" && sleep 2 && openclaw gateway start"
+alias og='source ~/.zshrc && openclaw'
+
 alias lo="logout"       # logout from current shell session
 # alias 't~'="tree -a -L 3 --dirsfirst -I 'Documents|Downloads|Applications|Music|Movies|Pictures|Library|raycast|.git|plugins|logs'"
 alias 't~'='() { tree -a -L "${1:-1}" --gitignore --dirsfirst -I "Documents|Downloads|Applications|Music|Movies|Pictures|Library|.git" "${2:-.}"; }'

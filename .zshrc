@@ -11,10 +11,11 @@ precmd() { PROMPT_SHOWN="true" }
 {
     # echo "ZDOTDIR is set to: ${ZDOTDIR/#$HOME/~}"
     if typeset -f zsh_bootlog >/dev/null 2>&1; then zsh_bootlog "Phase 3: Configuring git settings in .zshrc"; else echo "${(%):-%N}: zsh_bootlog not found!!!"; fi
-    [[ ! -f ~/.gitconfig ]] && ln -s ~/.config/git/gitconfig ~/.gitconfig 2>/dev/null
+    [[ ! -f "~/.gitconfig" ]] && ln -s ~/.config/git/gitconfig ~/.gitconfig 2>/dev/null
     [[ -f "$ZDOTDIR/lib/zsh-initgit.zsh" ]] && . "$ZDOTDIR/lib/zsh-initgit.zsh" 2>/dev/null || echo ".zshrc: 'zsh-initgit.zsh' file not found (check: $ZDOTDIR/lib/zsh-initgit.zsh)"
 } > >(tee -a "$ZLOGDIR/boot_async_git.zlog") 2>&1 &!
 
+[[ -f "$ZDOTDIR/secrets.key" ]] && . "$ZDOTDIR/secrets.key" 2>/dev/null || echo ".zshrc: 'secrets.key' file not found (check: ${ZDOTDIR/#$HOME/~}/secrets.key)"
 [[ -f "$ZDOTDIR/git-utils/git_users.zsh" ]] && . "$ZDOTDIR/git-utils/git_users.zsh"
 
 # Source interactive shell behaviour (only works because we're interactive here)
@@ -49,3 +50,6 @@ zsh_bootlog "Phase 9: Adding zsh fuzzy"
 
 zsh_bootlog "Phase 10: .zshrc complete."
 zprof > $ZLOGDIR/zprof.log
+
+# bun completions
+[ -s "/Users/mbair13m1/.bun/_bun" ] && source "/Users/mbair13m1/.bun/_bun"

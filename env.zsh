@@ -11,8 +11,9 @@
 
 export ZSHENV_DEBUG="false"                     # env debug mode
 export ZSHF_VERBOSE="false"                      # function verbosity
-export ZSH_DEBUG_BOOT="true"                   # boot debug logs
+export ZSH_DEBUG_BOOT="false"                   # boot debug logs
 export ZSH_PERF_MODE="${ZSH_PERF_MODE:-true}"    # performance mode for faster boots
+export GIT_UTILS_DEBUG="false"                    # git utils debug mode
 
 export GIT_PROVIDER="github"                    # "github" or "gitlab" (default: github)
 
@@ -20,7 +21,7 @@ export GIT_PROVIDER="github"                    # "github" or "gitlab" (default:
 export ZUTILS
 
 # prepend utils (so bootlog-handler becomes discoverable)
-export PATH="$ZUTILS:$PATH"
+export PATH="$ZUTILS:$HOME/.cache/.bun/bin:$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 [[ "$ZSH_DEBUG_BOOT" == "true" ]] && print -P "%F{yellow}⚙️  ZSH Boot Debug Mode Active — logs at $ZLOGDIR/boot.zlog%f"
 
@@ -34,7 +35,7 @@ fi
 # Phase 1 :done in ~/.zshenv. Following code requires that bootlog-handler be loaded first
 zsh_bootlog "Phase 1: ~/.zshenv (symlink to ~/.config/zsh/my.zshenv) complete.  env.zsh entered"
 
-export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# --------- XDG Base Directory Check & Setup ---------
 
 for dir in "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"; do
   [[ -d "$dir" ]] || mkdir -p "$dir"
@@ -43,6 +44,13 @@ done
 [[ "$ZSHENV_DEBUG" == "true" ]] && "${ZUTILS}"/zshenv_report
 
 [[ -f "$BREWDOTS/.env" ]] && source "$BREWDOTS/.env"
+
+# === Ensure bun global packages are in PATH ===
+if ! command -v openclaw &>/dev/null; then
+  if command -v bun &>/dev/null; then
+    export PATH="$HOME/.cache/.bun/bin:$PATH"
+  fi
+fi
 
 zsh_bootlog "Phase 2: env.zsh completed"
 
