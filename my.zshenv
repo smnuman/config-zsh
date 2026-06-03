@@ -27,6 +27,7 @@ export BREWLOGS="$HOME/.config/brew/logs"       # === BREWLOGDIR (brew related l
 export ZUTILS="$HOME/.config/zsh/utils"         # === ZSH Utils Directory ===
 export GUTILS="$HOME/.config/zsh/git-utils"     # === Git Utils Directory ===
 export BRUTILS="$HOME/.config/brew/utils"       # === BREW Utils Directory ===
+export GUTILS="$HOME/.config/zsh/git-utils"     # === Git Utils Directory ===
 
 # --------- HARDCODED default env log files setup ---------
 export ZLOGFILE="zsh.zlog"                      # Log file for this .zshrc

@@ -12,6 +12,7 @@ export ZSH_PATH_DEBUG="false"               # used in pathtools.zsh to toggle pa
 export ZSHF_VERBOSE="false"
 export ZSH_DEBUG_BOOT="false"
 export ZSH_PROFILE="false"
+export GIT_UTILS_DEBUG="false"              # git-utils internal debug messages (zshlog -v=$GIT_UTILS_DEBUG)
 
 export GIT_PROVIDER="github"
 

@@ -43,6 +43,8 @@ zsh_bootlog "Phase 6: configuring git (async)"
 } >> "$ZLOGDIR/boot_async_git.zlog" 2>&1 &!
 #  --- git utilities ---
 [[ -f "$ZDOTDIR/git-utils/git_users.zsh" ]] && source "$ZDOTDIR/git-utils/git_users.zsh"
+#  --- secrets (git-crypt encrypted) ---
+[[ -f "$ZDOTDIR/secrets.key" ]] && source "$ZDOTDIR/secrets.key" 2>/dev/null
 #  --- git workflow ---
 [[ -f "$ZDOTDIR/git-utils/gw.zsh" ]] && source "$ZDOTDIR/git-utils/gw.zsh"
 
@@ -118,5 +120,5 @@ zprof_end "TOTAL"
 # === Profile dump ===
 zprof_report
 
-# OpenClaw Completion
-source "/home/numan/.openclaw/completions/openclaw.zsh"
+# OpenClaw Completion (portable: repo-shipped, guarded — was hardcoded /home/numan/...)
+[[ -f "$ZDOTDIR/completions/openclaw.zsh" ]] && source "$ZDOTDIR/completions/openclaw.zsh"
