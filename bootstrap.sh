@@ -437,8 +437,9 @@ generate_zshrc_local() {
     echo ""
   } > "$dest_path"
 
-  if [[ "$PLATFORM" == "mac" ]]; then
-    cat >> "$dest_path" <<'LOCAL_EOF'
+  case "$PLATFORM" in
+    mac)
+      cat >> "$dest_path" <<'LOCAL_EOF'
 # --- bun global tools (macOS: globals live under ~/.cache/.bun/bin) ---
 [[ -d "$HOME/.cache/.bun/bin" ]] && export PATH="$HOME/.cache/.bun/bin:$PATH"
 
@@ -447,11 +448,31 @@ generate_zshrc_local() {
 
 # --- openclaw aliases ---
 alias clawstart='pkill -f openclaw-gateway; sleep 2; openclaw gateway start'
-alias og='source ~/.zshrc && openclaw'
+alias og='source $HOME/.zshrc && openclaw'
 LOCAL_EOF
-  else
-    cat >> "$dest_path" <<'LOCAL_EOF'
-# --- bun global tools (Linux/WSL: globals typically under ~/.bun/bin) ---
+      ;;
+    wsl)
+      cat >> "$dest_path" <<'LOCAL_EOF'
+# --- bun global tools (WSL: probe both common locations) ---
+for _d in "$HOME/.bun/bin" "$HOME/.cache/.bun/bin"; do
+  [[ -d "$_d" ]] && export PATH="$_d:$PATH"
+done
+unset _d
+
+# --- bun completions ---
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# --- open URLs/files via the Windows host when available ---
+command -v wslview >/dev/null 2>&1 && export BROWSER=wslview
+
+# --- openclaw aliases ---
+alias clawstart='pkill -f openclaw-gateway; sleep 2; openclaw gateway start'
+alias og='source $HOME/.zshrc && openclaw'
+LOCAL_EOF
+      ;;
+    *)  # linux (and any other)
+      cat >> "$dest_path" <<'LOCAL_EOF'
+# --- bun global tools (Linux: globals typically under ~/.bun/bin) ---
 [[ -d "$HOME/.bun/bin" ]] && export PATH="$HOME/.bun/bin:$PATH"
 
 # --- bun completions ---
@@ -459,9 +480,10 @@ LOCAL_EOF
 
 # --- openclaw aliases ---
 alias clawstart='pkill -f openclaw-gateway; sleep 2; openclaw gateway start'
-alias og='source ~/.zshrc && openclaw'
+alias og='source $HOME/.zshrc && openclaw'
 LOCAL_EOF
-  fi
+      ;;
+  esac
 
   ok "Generated .zshrc.local for $PLATFORM"
 }
