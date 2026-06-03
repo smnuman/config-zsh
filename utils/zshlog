@@ -28,6 +28,7 @@ zshlog_usage() {
     echo "    -t            Add a tab before message"
     echo "    -s            Skip logging (print only)"
     echo "    --verbose|-v  Force verbosity ON (echo)"
+    echo "    -v=true|false Set verbosity from a literal/value (e.g. -v=\$GIT_UTILS_DEBUG)"
     echo "    --quiet|-q    Force verbosity OFF (quiet mode logging)"
 }
 
@@ -104,6 +105,7 @@ while [[ "$1" == -* ]]; do
         -d) shift;      logdir_name="$1";       shift ;;
         -c) shift;      msg_color="$1";         shift ;;
         -v|--verbose)   opt_echo=true;          shift ;;
+        -v=*)           opt_echo="${1#-v=}";    shift ;;   # literal: -v=true|false, or -v=$VAR (e.g. git-utils -v=$GIT_UTILS_DEBUG)
         -q|--quiet)     opt_echo=false;         shift ;;
         -s)             opt_skiplog=true;       shift ;;
         -n)             nl="\n";                shift ;;
