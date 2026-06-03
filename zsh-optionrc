@@ -2,32 +2,73 @@
 # zsh-optionrc: Zsh Options Configuration File
 # ~/.config/zsh/zsh-optionrc
 
-# === Quality of Life ===
-setopt autocd                   # Just type dir name to cd into it
-setopt correct                  # Auto-correct commands
-setopt numericglobsort          # Sort filenames naturally (e.g. 1,2,10)
+# =============================================================================
+# Navigation & Directory Stack
+# =============================================================================
+setopt autocd                     # Just type dir name to cd into it
+setopt auto_pushd                 # Push old dir onto stack when cd
+setopt pushdminus                 # Use 'pushd -' to toggle between dirs
+setopt PUSHD_IGNORE_DUPS          # Don't add duplicate dirs to stack
+setopt PUSHD_SILENT               # Don't print dir stack after pushd/popd
+setopt globdots                   # Include dotfiles in globbing
 
-# === Globbing Power ===
-setopt extendedglob             # Enables regex-style globs
-setopt nocaseglob               # Case-insensitive globs
-setopt rcexpandparam            # Fancy parameter expansion like ${^var}
+# =============================================================================
+# Completion Behaviour
+# =============================================================================
+setopt auto_menu                  # Auto-complete with menu selection
+setopt auto_list                  # Automatically list files on ambiguous completion
+setopt glob_complete              # Allow glob patterns in completion
+setopt BASH_AUTO_LIST             # Use bash-style auto-listing of completions (LIST_AMBIGUOUS is respected)
+setopt LIST_AMBIGUOUS             # List all matches if completion is ambiguous
+setopt LIST_PACKED                # List completions in columns
+setopt LIST_TYPES                 # List file types (e.g. / for dirs, * for executables)
+# setopt LIST_TYPES_FIRST           # List directories before files
+setopt LIST_ROWS_FIRST            # Fill rows before columns in completion listing
+setopt COMPLETE_ALIASES           # Allow alias names in completion
+setopt MENU_COMPLETE              # Jump straight to menu selection on tab
+setopt REC_EXACT                  # Skip menu selection if typed string is already an exact match
+setopt LIST_BEEP                  # Audible feedback on failed completion
 
-# === History Management ===
-setopt APPEND_HISTORY           # Append (not overwrite) on shell exit
-setopt INC_APPEND_HISTORY       # Append commands as soon as executed
-setopt SHARE_HISTORY            # Share history instantly between sessions
-setopt EXTENDED_HISTORY         # Store timestamps in history
-setopt HIST_REDUCE_BLANKS       # Trim extra spaces
-setopt HIST_VERIFY              # Show command before running from history
-setopt HIST_IGNORE_DUPS         # Avoid duplicates
-setopt histignorealldups        # Remove older duplicates
-setopt histignorespace          # Skip commands starting with a space
-setopt hist_save_no_dups        # Save history without duplicates
-setopt hist_find_no_dups        # Do not find duplicates in history search
-setopt hist_no_store            # Don't store history commands themselves
-# Just in case, some redundant options for history
-setopt HIST_BEEP                # Audible feedback on failed history search
+# =============================================================================
+# Globbing Power
+# =============================================================================
+setopt extendedglob               # Enable regex-style globs (#, ~, ^ operators)
+setopt nocaseglob                 # Case-insensitive glob matching
+setopt rcexpandparam              # Fancy parameter expansion like ${^var}
+setopt numericglobsort            # Sort filenames naturally (e.g. 1, 2, 10)
 
-# === Prompt Substitution ===
-setopt prompt_subst             # Allow $(...) in PROMPT
-setopt prompt_cr                # Move to new line after prompt if wrapped
+# =============================================================================
+# Command Correction & Validation
+# =============================================================================
+setopt correct                    # Auto-correct misspelled commands
+setopt BAD_PATTERN                # Warn on bad glob patterns
+setopt PATH_DIRS                  # Search $PATH for commands
+setopt aliases                    # Allow aliases in prompt substitution
+
+# =============================================================================
+# History Management
+# =============================================================================
+setopt APPEND_HISTORY             # Append (not overwrite) on shell exit
+setopt INC_APPEND_HISTORY         # Append commands to history file immediately
+# setopt SHARE_HISTORY            # Share history instantly between sessions
+setopt BANG_HIST                  # Allow ! for history expansion
+setopt EXTENDED_HISTORY           # Store timestamps in history
+setopt HIST_REDUCE_BLANKS         # Trim extra whitespace before storing
+setopt HIST_VERIFY                # Show command before executing from history expansion
+setopt HIST_EXPIRE_DUPS_FIRST     # Expire duplicates first when trimming history
+setopt HIST_IGNORE_DUPS           # Don't save command if it's a duplicate of the previous one
+setopt HIST_IGNORE_ALL_DUPS       # Remove all older duplicates of the current command
+setopt HIST_IGNORE_SPACE          # Skip commands starting with a space
+setopt HIST_SAVE_NO_DUPS          # Save history without duplicates
+setopt HIST_FIND_NO_DUPS          # Don't show duplicates during history search
+setopt HIST_NO_STORE              # Don't store history-expansion commands (!!, !foo) themselves
+setopt HIST_BEEP                  # Audible feedback on failed history search
+
+# =============================================================================
+# Prompt & Display
+# =============================================================================
+setopt prompt_subst               # Allow $(...) and ${...} in PROMPT
+setopt PROMPT_SP                  # Add trailing space after prompt for readability
+setopt prompt_cr                  # Move to newline if prompt wraps, preventing overlap
+setopt prompt_percent             # Allow literal % in PROMPT with %%
+

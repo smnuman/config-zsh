@@ -30,11 +30,7 @@ git_clone() {
     local REPO="$1" DEST="$2"
     local CALLER="\e[0;42m${funcstack[2]}\e[0m"
 
-    # Log cloning operation unless in performance mode
-    [[ "$ZSH_PERF_MODE" != "true" ]] && $ZUTILS/zshlog -f "$LOGFILE" -n " <$CALLER> : \e[0;32mCloning \e[0;42m $REPO\e[31m → \e[0;42m $DEST \e[0m"
-
-    # Use optimized git clone options
-    git clone --depth=1 --single-branch ${ZSH_PERF_MODE:+--quiet} "git@github.com:$REPO.git" "$DEST" 2>/dev/null && return 0
+    git clone --depth=1 --single-branch --quiet "git@github.com:$REPO.git" "$DEST" 2>/dev/null && return 0
 
     $ZUTILS/zshlog -f "$LOGFILE" -v -t " <$CALLER> \e[33;47m:❌ Failed to clone $REPO.git \e[0m" && return 1
 }

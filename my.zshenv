@@ -13,9 +13,11 @@ export LC_ALL="en_US.UTF-8"
 umask 022                                       # Default: 755 for dirs, 644 for files
 
 export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_BIN_HOME="$HOME/.local/bin"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_RUNTIME_DIR="/run/user/$EUID"
 
 export ZDOTDIR="$HOME/.config/zsh"              # === ZDOTDIR (my dotfiles home) ===
 export ZLOGDIR="$HOME/.config/zsh/logs"         # === ZSH Log Directory (general logs) ===
@@ -23,6 +25,7 @@ export BREWDOTS="$HOME/.config/brew"            # === BREWDOTS (brew dotfiles) =
 export BREWLOGS="$HOME/.config/brew/logs"       # === BREWLOGDIR (brew related logs) ===
 
 export ZUTILS="$HOME/.config/zsh/utils"         # === ZSH Utils Directory ===
+export GUTILS="$HOME/.config/zsh/git-utils"     # === Git Utils Directory ===
 export BRUTILS="$HOME/.config/brew/utils"       # === BREW Utils Directory ===
 export GUTILS="$HOME/.config/zsh/git-utils"     # === Git Utils Directory ===
 
@@ -30,16 +33,6 @@ export GUTILS="$HOME/.config/zsh/git-utils"     # === Git Utils Directory ===
 export ZLOGFILE="zsh.zlog"                      # Log file for this .zshrc
 export BREWLOGFILE="brew.zlog"                  # Log file for brew activities
 
-export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no-color" || grep --color=never "" /dev/null >/dev/null 2>&1 && echo "--color=never" || echo "")
-
 export BAT_CONFIG_DIR="$HOME/.config/bat"       # === Bat Config Directory ===
 
-# === History Settings ===
-HISTFILE="$HOME/.zsh_history"
-HISTSIZE=200000
-SAVEHIST=200000
-
-export EDITOR="nvim"                            # === Editor ===
-export VISUAL="code"                            # === Editor ===
-
-setopt prompt_subst                             # === Minimal Shell Hinting ===
+echo "DEBUG: my.zshenv is being sourced" >> /tmp/zshenv-debug.log

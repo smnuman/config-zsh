@@ -53,3 +53,14 @@ bindkey '^E' end-of-line                 # Ctrl+E → go to end of line
 # --- 7️⃣ Clear & Misc ---
 bindkey '^L' clear-screen                # Ctrl+L → clear terminal
 bindkey '^R' history-incremental-search-backward  # Ctrl+R → reverse search
+
+#  --- moved from cmplist ---
+# --- History Search Keybindings ---
+autoload -U up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search        # Ctrl+P: search history backward (up)
+bindkey '^[[B' down-line-or-beginning-search      # Ctrl+N: search history forward (down)
+# bindkey '^R' history-incremental-search-backward    # Use Ctrl+R to search history
+#  if below is present, must add `stty -ixon` to .zshrc before 
+# bindkey '^S' history-incremental-search-forward     # Use Ctrl+S to search history forward (if terminal supports it)

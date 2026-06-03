@@ -3,101 +3,70 @@
 # ===============================================================
 #             *** CONSISTENT NOMAD Zsh ENVIRONMENT ***
 # ===============================================================
-# Guarantees predictable boot-variable state, and ensures that
-# zsh-bootlog-handler is sourced only AFTER all ZSHF_* vars are set.
-# ===============================================================
-# Sets up XDG directories, log files, utils, and sources brew env
+# Sets up XDG directories, log files, utils, and sourced before .zshrc
+# Phase 1–2 of the boot sequence (Phase 0 is my.zshenv — silent)
 # ===============================================================
 
-export ZSHENV_DEBUG="false"                     # env debug mode
-export ZSHF_VERBOSE="false"                      # function verbosity
-export ZSH_DEBUG_BOOT="false"                   # boot debug logs
-export ZSH_PERF_MODE="${ZSH_PERF_MODE:-true}"    # performance mode for faster boots
-export GIT_UTILS_DEBUG="false"                    # git utils debug mode
+export ZSHENV_DEBUG="false"
+export ZSH_PATH_DEBUG="false"               # used in pathtools.zsh to toggle path export debug logs
+export ZSHF_VERBOSE="false"
+export ZSH_DEBUG_BOOT="false"
+export ZSH_PROFILE="false"
+export GIT_UTILS_DEBUG="false"              # git-utils internal debug messages (zshlog -v=$GIT_UTILS_DEBUG)
 
-export GIT_PROVIDER="github"                    # "github" or "gitlab" (default: github)
+export GIT_PROVIDER="github"
 
-[[ -z "$ZUTILS" ]] && ZUTILS="$HOME/.config/zsh/utils"
-export ZUTILS
+export ZSHLIB="${ZDOTDIR}/lib"
 
-# prepend utils (so bootlog-handler becomes discoverable)
-export PATH="$ZUTILS:$HOME/.cache/.bun/bin:$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export ZUTILS="$HOME/.config/zsh/utils"
 
-[[ "$ZSH_DEBUG_BOOT" == "true" ]] && print -P "%F{yellow}⚙️  ZSH Boot Debug Mode Active — logs at $ZLOGDIR/boot.zlog%f"
+export PATH="$XDG_BIN_HOME:$ZUTILS:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
+export PATH=$HOME/.opencode/bin:$PATH   # opencode
+
+export DPRINT_INSTALL="$HOME/.dprint"           # === DPRINT Install Directory ===
+export PATH="$DPRINT_INSTALL/bin:$PATH"
+
+export PATH="$HOME/.bun/bin:$PATH"      # bun + globals (openclaw, omc, omc-cli, oh-my-claudecode, qmd, agent-browser, bunx)
+
+[[ "$ZSH_DEBUG_BOOT" == "true" ]] && print -P "%F{yellow}ZSH Boot Debug Active — logs at $ZLOGDIR/boot.zlog%f"
+
+# === zsh Boot Logger ===
 if [[ -f "$ZUTILS/zsh-bootlog-handler" ]]; then
     source "$ZUTILS/zsh-bootlog-handler"
-    [[ "$ZSH_DEBUG_BOOT" == "true" ]] && [[ "$ZSHF_VERBOSE" == "true" ]] && print -- "<env.zsh[$LINENO]>: bootlog-handler successfully sourced from ${(q)ZUTILS}/zsh-bootlog-handler"
-else
-    print -- "<env.zsh[$LINENO]>: bootlog-handler not found in ${(q)ZUTILS}" >&2
 fi
 
-# Phase 1 :done in ~/.zshenv. Following code requires that bootlog-handler be loaded first
-zsh_bootlog "Phase 1: ~/.zshenv (symlink to ~/.config/zsh/my.zshenv) complete.  env.zsh entered"
+zsh_bootlog "Phase 1: env.zsh entered (my.zshenv complete)"
 
-# --------- XDG Base Directory Check & Setup ---------
+# === Init Profiler ===
+source "$ZSHLIB/init-profiler.zsh" 2>/dev/null
+zprof_start "TOTAL"
+zprof_start ".env.zsh"
 
 for dir in "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"; do
   [[ -d "$dir" ]] || mkdir -p "$dir"
 done
 
+# === History ===
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=200000
+SAVEHIST=200000
+
+# === Editor ===
+export EDITOR="nvim"
+export VISUAL="code"
+
+# === Shell Options ===
+setopt prompt_subst
+
+# === Computed ===
+export GREP_NOCOLOR=$(grep --no-color "" /dev/null >/dev/null 2>&1 && echo "--no-color" || grep --color=never "" /dev/null >/dev/null 2>&1 && echo "--color=never" || echo "")
+
+# # === Terminal Title Management (OpenClaw) ===
+# [[ -f "$ZUTILS/zsh-title.zsh" ]] && source "$ZUTILS/zsh-title.zsh"
+
+zprof_end ".env.zsh"
+
 [[ "$ZSHENV_DEBUG" == "true" ]] && "${ZUTILS}"/zshenv_report
 
-[[ -f "$BREWDOTS/.env" ]] && source "$BREWDOTS/.env"
-
-# === Ensure bun global packages are in PATH ===
-if ! command -v openclaw &>/dev/null; then
-  if command -v bun &>/dev/null; then
-    export PATH="$HOME/.cache/.bun/bin:$PATH"
-  fi
-fi
-
 zsh_bootlog "Phase 2: env.zsh completed"
-
-
-# *****************************************************
-
-
-# #!/usr/bin/env zsh
-# # ~/.config/zsh/env.zsh         # sourced from ~/.zshenv
-# # ===============================================================
-# #                  NOMAD Zsh Environment Setup
-# # ===============================================================
-# # Sets up XDG directories, log files, utils, and sources brew env
-# # ===============================================================
-
-
-# export ZSHF_VERBOSE="false"                     # zsh-functions verbosity
-# export ZSHENV_DEBUG="false"                     # Set env debug to "true" to enable debug env info
-# export ZSH_DEBUG_BOOT="false"                   # Set boot debug to "true" to get debug info during shell boot
-
-# [[ -z "$ZUTILS" ]] && ZUTILS="$HOME/.config/zsh/utils"
-# export ZUTILS
-# export PATH="$ZUTILS:$PATH"
-
-# # # --- Bootlog handler early load (before sourcing env.zsh) ---
-# [[ -f $ZUTILS/zsh-bootlog-handler ]] && source $ZUTILS/zsh-bootlog-handler 2>/dev/null  && echo "\n\tbootlog-handler successfully sourced!\n" || echo "<- ${${(%):-%N}:t}[$LINENO] ->: 'zsh-bootlog-handler' utility not found (check: ${ZUTILS/#$HOME/~}/zsh-bootlog-handler)";
-
-# # === Secure Default PATH ===
-# export PATH="$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-
-# # ------------------------------ Boot Debug Logger ------------------------------
-# # ~/.zshenv
-# # [[ -f "$HOME/.config/zsh/utils/zsh-bootlog-handler" ]] && source "$HOME/.config/zsh/utils/zsh-bootlog-handler" # 2>/dev/null || echo "<env.zsh[$LINENO]>: 'zsh-bootlog-handler' utility not found (check: ${ZUTILS/#$HOME/~}/zsh-bootlog-handler)"
-# # [[ "$ZSH_DEBUG_BOOT" == "true" ]] &&
-# touch "$ZLOGDIR/boot.zlog"
-# # && { source "$ZUTILS/zsh-bootlog-handler" 2>/dev/null || echo "<- ${${(%):-%N}:t}[$LINENO] ->: 'zsh-bootlog-handler' utility not found (check: ${ZUTILS/#$HOME/~}/zsh-bootlog-handler)" ; }
-
-# zsh_bootlog "Phase 1: ~/.zshenv (symlink to ~/.config/zsh/my.zshenv) complete. " # || echo "<- ${${(%):-%N}:t}[$LINENO] ->: zsh_bootlog not found!!!"
-
-# # --------- XDG Base Directory Check & Setup ---------
-# for dir in "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"; do
-#   [[ -d "$dir" ]] || mkdir -p "$dir"
-# done
-
-# [[ "$ZSHENV_DEBUG" == "true" ]] && "${ZUTILS}"/zshenv_report
-
-# # Load Brew environment
-# [[ -f "$BREWDOTS/.env" ]] && source "$BREWDOTS/.env"
-
-# zsh_bootlog "Phase 2: ${ZDOTDIR/#$HOME/~}/env.zsh completed"

@@ -13,12 +13,10 @@ alias l.='ls -A'                # List all files in short format without human-r
 alias 'll.'='ls -lAG'           # List all files in long format with human-readable sizes
 alias 'll..'="ls -ld .[^.]*"    # List only hidden files (dotfiles) in current directory
 alias lt='ls -lt'               # List files sorted by modification time, newest first
-
 alias lt='ls -alrt'             # List all files sorted by modification time, oldest first
 alias lS='ls -lS'               # List files sorted by size, largest first
 alias lc='ls -l | wc -l'        # Count files in current directory (including . and ..)
 alias gsls='~/.config/zsh/git-utils/git-status-ls '
-
 alias eza='eza -alo --icons --total-size --git --colour=auto'
 # alias eza='eza -alo --icons --total-size --group-directories-first --git --colour=auto'
 alias ezat='eza -T --git-ignore'
@@ -36,45 +34,45 @@ alias eza-theme='() {
     fi
 }'
 alias eza-themes='ls -1 "$HOME/.config/eza/eza-themes/themes/" | sed "s/\.yml$//"'
-
-alias clawstart="pkill -f "openclaw-gateway" && sleep 2 && openclaw gateway start"
-alias og='source ~/.zshrc && openclaw'
-
 alias lo="logout"       # logout from current shell session
 # alias 't~'="tree -a -L 3 --dirsfirst -I 'Documents|Downloads|Applications|Music|Movies|Pictures|Library|raycast|.git|plugins|logs'"
 alias 't~'='() { tree -a -L "${1:-1}" --gitignore --dirsfirst -I "Documents|Downloads|Applications|Music|Movies|Pictures|Library|.git" "${2:-.}"; }'
 # ---
 alias c='clear'         # Clear the terminal screen
-alias s='source ~/.config/zsh/.zshrc'           # source .zshrc
+# alias s='source ~/.config/zsh/.zshrc'           # source .zshrc
+alias s='source ~/.config/zsh/.zshrc && hash -r && echo "\n\t===== new zsh sourced =====\n" || echo "\nxxxxx Failed sourcing new zsh xxxxx\n"'
 alias sd='ZSH_DEBUG_BOOT=true exec zsh'         # source .zshrc with debug
 alias v='nvim -c "colorscheme vim"'             # alias for nvim
 alias which='type -a'   # Show all locations of a command
-
 # Return to previous folder/directory
 alias -- -='cd -'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 alias .....='cd ../../../..'
-# ---
+# --- logs and docs ---
 alias zlog='tail -n 20 "$ZLOGDIR/$ZLOGFILE"'
 alias pluglog='tail -n 20 "$ZLOGDIR/plugin-update.log"'
 alias brewlog='tail -n 20 "$BREWDOTS/logs/brew-activity.log"'
 alias brewlogall='more "$BREWDOTS/logs/brew-activity.log"'
 # Quick open PATH Legend
 alias path-legend="code ~/.config/docs/PATH-legend.md"
-# ---
+# --- git helpers for prompt ---
+alias gm='git switch main && git pull'
+alias gnb='git switch -c'
+alias gl='git log --oneline --graph --decorate --all'
+# alias gs='git status'
 alias gs='read BEHIND AHEAD <<< "$(git rev-list --left-right --count @{u}...HEAD 2>/dev/null || echo "0 0")"; echo "📊 Ahead: $AHEAD, Behind: $BEHIND"'
 # alias gsync='git fetch --all && gsync-status'
 # alias gsync-pull='git fetch --all && git pull --rebase'
 # alias gsync-push='git fetch --all && git push'
 # alias grepo='f() { git init && git remote add origin "git@github.com:smnuman/$(basename $PWD).git" && git add . && git commit -m "${1:-Initial commit}" && git push -u origin master; }; f'
+alias gfetch='git fetch origin && git rebase origin/main'
 # ---
 alias path='echo ${PATH//:/\\n}'
 # alias path='echo "$PATH" | tr ":" "\n"'
 # =================== extra aliases end here ======================
 #
 [[ -f $BREWDOTS/brewx ]] && alias brew="$BREWDOTS/brewx"
-
 # ======================= History aliases ==============================
 alias h='history -10'                     # Show last 10 history entries
 alias h50='history -50'                   # Show last 50 history entries
@@ -90,31 +88,26 @@ alias hg='history 1 | grep --color=never ' # Search full history for a specific 
 # histoggle: toggle shared vs private history mode
 # alias histoggle='if setopt | grep -q share_history; then unsetopt SHARE_HISTORY INC_APPEND_HISTORY; echo "🔒 private"; else setopt SHARE_HISTORY INC_APPEND_HISTORY; echo "🌐 shared"; fi'
 # =================== History aliases end here ========================
-
 alias cat='bat --paging=never'            # Use bat instead of cat
 alias mdcd='function _mkcd(){ mkdir -p "$1" && cd "$1"; }; _mkcd'
 # https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html#comment-21984
 alias ps2=’ps -ef | grep -v $$ | grep -i ‘  # Search for processes excluding the current one: I always create a ps2 command that I can easily pass a string to and look for it in the process table. I even have it remove the grep of the current line.
 alias del='rm -I –preserve_root'        # Interactive delete with confirmation: I alias rm to rm -i but sometimes I want a more interactive prompt. So I created a del command that uses rm -I which prompts once if you are deleting more than three files or recursively.
-
 # ======================= NETWORK management functions =======================
-alias usage='ifconfig wlan0 | grep 'bytes''
-alias connections='sudo lsof -n -P -i +c 15'
-alias ports='sudo lsof -i -P | grep LISTEN'
-alias myip='curl ifconfig.me && echo'  # Get public IP address
-alias localip="ipconfig getifaddr en0" # Get local IP address (macOS)
-alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder; echo "DNS cache flushed."' # Flush DNS cache (macOS)
-
+alias usage='ip -s link'
+# [disabled on Linux] alias connections='sudo lsof -n -P -i +c 15'
+# [disabled on Linux] alias ports='sudo lsof -i -P | grep LISTEN'
+alias myip='curl -s ifconfig.me'
+alias localip='hostname -I 2>/dev/null'
+# alias flushdns removed — not applicable on Linux
 # ======================= File Managers =======================
 alias f='fman'
 # alias l='lf'  # already used as 'ls' alias
 alias n='nnn'
 alias y='yazi'
-
 # =============================================================
 # ##               NOMAD Smart tmux helpers                  ##
 # =============================================================
-
 # Smart reattach-or-new (attach if exists, else create) tmux session
 t() {
   local name="${1:-nomad}"
@@ -122,16 +115,13 @@ t() {
     && tmux attach -t "$name" \
     || tmux new -s "$name"
 }
-
 # Quickly create or switch to a new tmux window
 tnew() {
   local name="${1:-${PWD##*/}}"
 #   local cwd_name="${PWD##*/}"  # last folder name
   local session="${2:-nomad}"
-
   # Auto-name the window after current folder if none provided
 #   [[ -z "$name" ]] && name="$cwd_name"
-
   if [[ -n "$TMUX" ]]; then
     # Inside tmux: create new window
     tmux new-window -n "$name"
@@ -143,7 +133,6 @@ tnew() {
       || tmux new -s "$session" -n "$name"
   fi
 }
-
 # Short alias
 alias tw='tnew'
 # --- tmux shortcuts for NOMAD setup ---
@@ -154,5 +143,4 @@ alias tk='tmux kill-session -t; tmux ls'        # kill a session
 alias tka='tmux kill-server'           # kill all tmux sessions
 alias td='tmux detach'                 # detach from inside a session or standard: <prefix> + d
 alias ts='tmux-start'                  # use your custom tmux starter script
-
 # ==================== tmux helpers end here ====================
