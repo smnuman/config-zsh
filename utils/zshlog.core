@@ -90,8 +90,8 @@ zshlog() {
             -f) shift;      logfile_name="$1";      shift ;;
             -d) shift;      logdir_name="$1";       shift ;;
             -c) shift;      msg_color="$1";         shift ;;
-            -v=*)           local vvar="${1#-v=}"; [[ -z "$vvar" ]] && { print -u2 "zshlog(${funcstack[3]:-main}:$line): -v requires an intentional value <true>";  return 1 ; };
-                            opt_echo="${(P)vvar:-false}";
+            -v=*)           local vval="${1#-v=}"; [[ -z "$vval" ]] && { print -u2 "zshlog(${funcstack[3]:-main}:$line): -v requires an intentional value <true|false>";  return 1 ; };
+                            opt_echo="${vval:-false}";    # literal boolean: -v=true|false, or -v=$VAR (expanded at call site)
                                                     shift ;;
             --verbose)      opt_echo=true;          shift ;;
             -q|--quiet)     opt_echo=false;         shift ;;
