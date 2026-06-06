@@ -56,7 +56,7 @@ export ZDOTDIR="$HOME/.config/zsh"
 plugin_manager_load_all 2>/dev/null || true
 
 # WSL login fix
-if grep -q Microsoft /proc/version; then
+if [[ -r /proc/version ]] && grep -q Microsoft /proc/version; then
     export SHELL="/usr/bin/zsh"
     exec /usr/bin/zsh -l
 fi

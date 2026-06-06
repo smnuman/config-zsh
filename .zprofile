@@ -4,7 +4,7 @@
 # WSL login shell enforcement
 # ---------------------------------------------------------------------
 
-if [[ -z "$ZSH_WSL_LOGIN_DONE" ]] && grep -qi microsoft /proc/version; then
+if [[ -z "$ZSH_WSL_LOGIN_DONE" && -r /proc/version ]] && grep -qi microsoft /proc/version; then
     export ZSH_WSL_LOGIN_DONE=1
 
     if [[ "$SHLVL" -eq 1 && ! -o login ]]; then
