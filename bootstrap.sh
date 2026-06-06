@@ -713,6 +713,36 @@ setup_symlinks() {
       ok "~/.zprofile already linked"
     fi
   fi
+
+  # ~/.config/.promptrc → $ZDOTDIR/prompt/prompt.rc  [user-editable prompt config]
+  # Per-machine: dotconfig parent .gitignores .promptrc so the symlink target
+  # can differ between hosts without dirtying the repo.
+  local promptrc_dest="$(dirname "$ZDOTDIR")/.promptrc"
+  local promptrc_src="$ZDOTDIR/prompt/prompt.rc"
+  if [[ -f "$promptrc_src" ]]; then
+    if [[ ! -L "$promptrc_dest" ]]; then
+      if [[ -f "$promptrc_dest" && ! -L "$promptrc_dest" ]]; then
+        local promptrc_bak="$promptrc_dest.pre-bootstrap"
+        if [[ "$DRY_RUN" == "true" ]]; then
+          info "[dry-run] would backup $promptrc_dest → $promptrc_bak"
+          info "[dry-run] would link $promptrc_dest → $promptrc_src"
+        else
+          mv "$promptrc_dest" "$promptrc_bak"
+          ln -sf "$promptrc_src" "$promptrc_dest"
+          ok "Linked .promptrc → prompt/prompt.rc (backed up old → .promptrc.pre-bootstrap)"
+        fi
+      elif [[ ! -e "$promptrc_dest" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+          info "[dry-run] would link $promptrc_dest → $promptrc_src"
+        else
+          ln -sf "$promptrc_src" "$promptrc_dest"
+          ok "Linked .promptrc → prompt/prompt.rc"
+        fi
+      fi
+    else
+      ok ".promptrc already linked"
+    fi
+  fi
 }
 
 # ─── Post-Install Summary ─────────────────────────────────────
