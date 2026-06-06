@@ -745,6 +745,53 @@ setup_symlinks() {
   fi
 }
 
+# ─── Sync submodule.<name>.update from .gitmodules → local .git/config ──
+# Background: `git submodule init` only copies submodule URLs to .git/config.
+# Other `.gitmodules` settings (notably `update = merge`) are NOT copied, so
+# fresh clones fall back to `update = checkout` and detach every submodule on
+# pull. This recurses from the parent of $ZDOTDIR (e.g. ~/.config) through
+# every nested submodule and applies each `submodule.<name>.update` value
+# from `.gitmodules` into the corresponding repo's `.git/config`.
+_sync_update_recursive() {
+  local repo="$1"
+  local gitmodules="$repo/.gitmodules"
+  [[ -f "$gitmodules" ]] || return 0
+  local applied=false
+
+  # Apply each submodule.<name>.update entry to repo's local .git/config
+  while IFS=' ' read -r key value; do
+    [[ -z "$key" ]] && continue
+    if [[ "$DRY_RUN" == "true" ]]; then
+      info "[dry-run] would set $key=$value in ${repo/$HOME/~}/.git/config"
+    else
+      git -C "$repo" config "$key" "$value"
+    fi
+    applied=true
+  done < <(git -C "$repo" config -f .gitmodules --get-regexp 'submodule\..*\.update' 2>/dev/null || true)
+
+  if [[ "$applied" == "true" ]]; then
+    ok "Submodule update strategies applied in ${repo/$HOME/~}"
+  fi
+
+  # Recurse into each submodule that's been initialised
+  while IFS=' ' read -r key sub_path; do
+    [[ -z "$sub_path" ]] && continue
+    local sub_repo="$repo/$sub_path"
+    [[ -e "$sub_repo/.git" ]] || continue
+    _sync_update_recursive "$sub_repo"
+  done < <(git -C "$repo" config -f .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null || true)
+}
+
+setup_submodule_update_strategy() {
+  local parent
+  parent="$(dirname "$ZDOTDIR")"
+  if [[ ! -e "$parent/.git" ]]; then
+    return 0  # not inside a parent git repo — nothing to sync
+  fi
+  info "Syncing submodule update strategies from .gitmodules..."
+  _sync_update_recursive "$parent"
+}
+
 # ─── Post-Install Summary ─────────────────────────────────────
 print_summary() {
   echo ""
@@ -877,6 +924,10 @@ main() {
   # ── Set up symlinks ──
   echo ""
   setup_symlinks
+
+  # ── Sync submodule update strategy (.gitmodules → local .git/config) ──
+  echo ""
+  setup_submodule_update_strategy
 
   # ── Print Summary ──
   print_summary
