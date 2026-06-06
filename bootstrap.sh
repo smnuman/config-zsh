@@ -745,20 +745,30 @@ setup_symlinks() {
   fi
 }
 
-# ─── Sync submodule.<name>.update from .gitmodules → local .git/config ──
-# Background: `git submodule init` only copies submodule URLs to .git/config.
-# Other `.gitmodules` settings (notably `update = merge`) are NOT copied, so
-# fresh clones fall back to `update = checkout` and detach every submodule on
-# pull. This recurses from the parent of $ZDOTDIR (e.g. ~/.config) through
-# every nested submodule and applies each `submodule.<name>.update` value
-# from `.gitmodules` into the corresponding repo's `.git/config`.
+# ─── Sync submodule strategy + attach detached submodules to their branch ──
+# Two related gaps in stock git, fixed here:
+#
+# 1. `git submodule init` only copies submodule URLs to local `.git/config`.
+#    Other `.gitmodules` settings (notably `update = merge`) are NOT copied,
+#    so fresh clones default to `update = checkout` and every parent pull
+#    leaves submodules in DETACHED HEAD despite `.gitmodules` saying merge.
+#
+# 2. `update = merge` only takes effect when the submodule is already on a
+#    branch — git needs something to fast-forward INTO. A freshly-cloned
+#    submodule is on detached HEAD at the recorded SHA, so the very first
+#    pull after install would still detach it. We fix this by checking each
+#    submodule's HEAD and switching it to the tracking branch (`branch =`
+#    in `.gitmodules`) if currently detached.
+#
+# Recurses from the parent of $ZDOTDIR (typically ~/.config) through every
+# initialised nested submodule.
 _sync_update_recursive() {
   local repo="$1"
   local gitmodules="$repo/.gitmodules"
   [[ -f "$gitmodules" ]] || return 0
   local applied=false
 
-  # Apply each submodule.<name>.update entry to repo's local .git/config
+  # (1) Apply each submodule.<name>.update entry to repo's local .git/config
   while IFS=' ' read -r key value; do
     [[ -z "$key" ]] && continue
     if [[ "$DRY_RUN" == "true" ]]; then
@@ -773,11 +783,28 @@ _sync_update_recursive() {
     ok "Submodule update strategies applied in ${repo/$HOME/~}"
   fi
 
-  # Recurse into each submodule that's been initialised
+  # (2) For each submodule path: attach to its tracking branch if detached, then recurse
   while IFS=' ' read -r key sub_path; do
     [[ -z "$sub_path" ]] && continue
     local sub_repo="$repo/$sub_path"
     [[ -e "$sub_repo/.git" ]] || continue
+
+    # If this submodule has a `branch = ...` entry and is currently detached,
+    # attach to that branch so subsequent `update = merge` can fast-forward.
+    local name="${key#submodule.}"
+    name="${name%.path}"
+    local branch
+    branch=$(git -C "$repo" config -f .gitmodules --get "submodule.${name}.branch" 2>/dev/null || true)
+    if [[ -n "$branch" ]] && ! git -C "$sub_repo" symbolic-ref -q HEAD >/dev/null 2>&1; then
+      if [[ "$DRY_RUN" == "true" ]]; then
+        info "[dry-run] would attach ${sub_repo/$HOME/~} to branch '$branch' (currently detached)"
+      else
+        git -C "$sub_repo" checkout "$branch" >/dev/null 2>&1 \
+          && ok "Attached ${sub_repo/$HOME/~} to '$branch'" \
+          || warn "Could not attach ${sub_repo/$HOME/~} to '$branch' (branch missing?)"
+      fi
+    fi
+
     _sync_update_recursive "$sub_repo"
   done < <(git -C "$repo" config -f .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null || true)
 }
@@ -788,7 +815,7 @@ setup_submodule_update_strategy() {
   if [[ ! -e "$parent/.git" ]]; then
     return 0  # not inside a parent git repo — nothing to sync
   fi
-  info "Syncing submodule update strategies from .gitmodules..."
+  info "Syncing submodule update strategies + attaching detached submodules..."
   _sync_update_recursive "$parent"
 }
 
