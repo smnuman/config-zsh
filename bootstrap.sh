@@ -686,6 +686,33 @@ setup_symlinks() {
   else
     ok "~/.zshrc already linked"
   fi
+
+  # ~/.zprofile → ~/.config/zsh/lib/.zprofile  [macOS only — loads brew shellenv]
+  if [[ "$PLATFORM" == "macos" ]]; then
+    local zprofile_src="$ZDOTDIR/lib/.zprofile"
+    if [[ ! -L "$HOME/.zprofile" ]]; then
+      if [[ -f "$HOME/.zprofile" && ! -L "$HOME/.zprofile" ]]; then
+        local zprofile_bak="$HOME/.zprofile.pre-bootstrap"
+        if [[ "$DRY_RUN" == "true" ]]; then
+          info "[dry-run] would backup ~/.zprofile → $zprofile_bak"
+          info "[dry-run] would link ~/.zprofile → $zprofile_src"
+        else
+          mv "$HOME/.zprofile" "$zprofile_bak"
+          ln -sf "$zprofile_src" "$HOME/.zprofile"
+          ok "Linked ~/.zprofile → lib/.zprofile (backed up old → .zprofile.pre-bootstrap)"
+        fi
+      elif [[ ! -e "$HOME/.zprofile" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+          info "[dry-run] would link ~/.zprofile → $zprofile_src"
+        else
+          ln -sf "$zprofile_src" "$HOME/.zprofile"
+          ok "Linked ~/.zprofile → lib/.zprofile (brew shellenv on login)"
+        fi
+      fi
+    else
+      ok "~/.zprofile already linked"
+    fi
+  fi
 }
 
 # ─── Post-Install Summary ─────────────────────────────────────
@@ -709,10 +736,17 @@ print_summary() {
   echo "  ${CYAN}Manual steps:${NC}"
   echo ""
 
-  if [[ "$PLATFORM" == "macos" ]] && ! command -v brew &>/dev/null; then
-    echo "    ○ Install Homebrew: https://brew.sh"
-    echo "    ○ Then run: brew shellenv > ~/.config/brew/.env"
-    echo ""
+  if [[ "$PLATFORM" == "macos" ]]; then
+    if ! command -v brew &>/dev/null && [[ ! -x /opt/homebrew/bin/brew && ! -x /usr/local/bin/brew ]]; then
+      echo "    ○ Install Homebrew: https://brew.sh"
+      echo "      (no further config needed — ~/.zprofile → lib/.zprofile will"
+      echo "       pick it up automatically on next login shell)"
+      echo ""
+    else
+      echo "    ○ Homebrew detected — loaded on login via ~/.zprofile symlink"
+      echo "      (managed at: $ZDOTDIR/lib/.zprofile)"
+      echo ""
+    fi
   fi
 
   if [[ "$PLATFORM" == "wsl" ]]; then
