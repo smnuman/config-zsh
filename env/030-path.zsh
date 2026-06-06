@@ -13,6 +13,9 @@ path_add() {
 path_add "$HOME/.local/bin"
 path_add "$HOME/bin"
 
+# Rust toolchain (cargo-installed binaries — guardy, etc.)
+path_add "$HOME/.cargo/bin"
+
 # Windows CLI tools (optional but safe)
 path_add "$WIN_ROOT"
 path_add "$WIN_ROOT/System32"
