@@ -1,39 +1,44 @@
 # == 🔇 claude-mem Context Verbosity Toggle ==
-# Suppresses verbose session-start context output from the claude-mem plugin
-# by setting the four CLAUDE_MEM_CONTEXT_SHOW_* env vars read by worker-service.cjs.
-# Cache file to remember last mode
-CLAUDE_MEM_MODE_CACHE="${HOME}/.cache/claude_mem_context_mode"
+# Mutates ~/.claude-mem/settings.json to flip the four CLAUDE_MEM_CONTEXT_SHOW_*
+# keys read per-request by the claude-mem plugin's iT() context generator.
+# The plugin's worker daemon captures env vars only at startup, so env-var
+# toggles don't take effect until the worker restarts. Mutating settings.json
+# applies on the next SessionStart hook fire with no daemon restart needed.
 
-# Ensure cache folder exists
-mkdir -p "$(dirname "$CLAUDE_MEM_MODE_CACHE")"
+CLAUDE_MEM_SETTINGS="${HOME}/.claude-mem/settings.json"
 
-# Apply previous mode if cache exists
-if [[ -f "$CLAUDE_MEM_MODE_CACHE" ]]; then
-    mode=$(<"$CLAUDE_MEM_MODE_CACHE")
-    if [[ "$mode" == "quiet" ]]; then
-        export CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS=false
-        export CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS=false
-        export CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY=false
-        export CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE=false
-    fi
-fi
-
-# Function to toggle mode
 toggle_claude_mem_quiet() {
-    if [[ "${CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS}" == "false" ]]; then
-        unset CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS
-        unset CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS
-        unset CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY
-        unset CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE
-        echo "verbose" > "$CLAUDE_MEM_MODE_CACHE"
-        echo "🔊 claude-mem context restored — relaunch claude to apply."
+    if [[ ! -f "$CLAUDE_MEM_SETTINGS" ]]; then
+        echo "❌ $CLAUDE_MEM_SETTINGS not found — is claude-mem installed?" >&2
+        return 1
+    fi
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "❌ python3 required to mutate $CLAUDE_MEM_SETTINGS" >&2
+        return 1
+    fi
+    local new
+    new=$(python3 - "$CLAUDE_MEM_SETTINGS" <<'PY'
+import json, pathlib, sys
+p = pathlib.Path(sys.argv[1])
+d = json.loads(p.read_text())
+keys = (
+    "CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS",
+    "CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS",
+    "CLAUDE_MEM_CONTEXT_SHOW_SAVINGS_AMOUNT",
+    "CLAUDE_MEM_CONTEXT_SHOW_SAVINGS_PERCENT",
+)
+new = "true" if d.get(keys[0], "true") == "false" else "false"
+for k in keys:
+    d[k] = new
+p.write_text(json.dumps(d, indent=2))
+print(new)
+PY
+) || { echo "❌ failed to mutate $CLAUDE_MEM_SETTINGS" >&2; return 1; }
+
+    if [[ "$new" == "false" ]]; then
+        echo "🔇 claude-mem context suppressed — applies on your next claude session."
     else
-        export CLAUDE_MEM_CONTEXT_SHOW_READ_TOKENS=false
-        export CLAUDE_MEM_CONTEXT_SHOW_WORK_TOKENS=false
-        export CLAUDE_MEM_CONTEXT_SHOW_LAST_SUMMARY=false
-        export CLAUDE_MEM_CONTEXT_SHOW_LAST_MESSAGE=false
-        echo "quiet" > "$CLAUDE_MEM_MODE_CACHE"
-        echo "🔇 claude-mem context suppressed — relaunch claude to apply."
+        echo "🔊 claude-mem context restored — applies on your next claude session."
     fi
 }
 alias memquiet='toggle_claude_mem_quiet'
