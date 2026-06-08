@@ -448,7 +448,7 @@ generate_zshrc_local() {
 
 # --- openclaw aliases ---
 alias clawstart='pkill -f openclaw-gateway; sleep 2; openclaw gateway start'
-alias og='source $HOME/.zshrc && openclaw'
+alias og='source $ZDOTDIR/.zshrc && openclaw'
 LOCAL_EOF
       ;;
     wsl)
@@ -467,7 +467,7 @@ command -v wslview >/dev/null 2>&1 && export BROWSER=wslview
 
 # --- openclaw aliases ---
 alias clawstart='pkill -f openclaw-gateway; sleep 2; openclaw gateway start'
-alias og='source $HOME/.zshrc && openclaw'
+alias og='source $ZDOTDIR/.zshrc && openclaw'
 LOCAL_EOF
       ;;
     *)  # linux (and any other)
@@ -480,7 +480,7 @@ LOCAL_EOF
 
 # --- openclaw aliases ---
 alias clawstart='pkill -f openclaw-gateway; sleep 2; openclaw gateway start'
-alias og='source $HOME/.zshrc && openclaw'
+alias og='source $ZDOTDIR/.zshrc && openclaw'
 LOCAL_EOF
       ;;
   esac

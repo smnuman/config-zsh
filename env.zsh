@@ -29,6 +29,18 @@ export PATH="$DPRINT_INSTALL/bin:$PATH"
 
 export PATH="$HOME/.bun/bin:$PATH"      # bun + globals (openclaw, omc, omc-cli, oh-my-claudecode, qmd, agent-browser, bunx)
 
+# --- legacy single-arch version (kept commented for reference) ---
+# eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# --- portable across Apple Silicon and Intel Macs ---
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  # Apple Silicon
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+  # Intel Mac
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 [[ "$ZSH_DEBUG_BOOT" == "true" ]] && print -P "%F{yellow}ZSH Boot Debug Active — logs at $ZLOGDIR/boot.zlog%f"
 
 # === zsh Boot Logger ===

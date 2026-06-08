@@ -18,6 +18,7 @@
 !/utils/
 !/utils/**
 !/zsh-*
+!/docs/
 
 *.bak *.backup *.pre-bootstrap *-bak *.arc *.archive
 *~ *.swp *.swo *.tmp *.log .DS_Store
