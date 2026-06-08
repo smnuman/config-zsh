@@ -33,24 +33,35 @@ The setup auto-generates completion cache and loads all modules on first run.
 
 ```
 zsh/
-├── .zshrc                    # Main config entry point
+├── .zshrc                    # Main config entry point (loaded via ZDOTDIR)
+├── .zshrc.local              # Machine-specific overrides (gitignored, sourced last)
 ├── my.zshenv                 # Environment variables (symlinked to ~/.zshenv)
-├── env.zsh                   # ZDOTDIR and core exports
+├── env.zsh                   # Core environment: PATH, brew shellenv, history, editor
+├── env/                      # Modular env file loader (phase-ordered)
+│   ├── 010-windows.zsh      # WSL paths (harmless no-op on macOS/Linux)
+│   ├── 020-workspace.zsh    # Shared workspace dirs
+│   ├── 030-path.zsh         # PATH additions (cargo, local, WSL)
+│   ├── 040-livekit.zsh      # LiveKit config
+│   └── 999-alias.zsh        # Convenience aliases
 ├── completions/              # Custom completion scripts
-├── git-utils/                # Custom Git workflow functions
+├── git-utils/                # Custom Git workflow functions (submodule)
 │   ├── git-utils.zsh        # Main implementation
 │   └── README.md            # Git utilities documentation
 ├── lib/                      # Core library functions
-│   └── plugin_manager.zsh   # Custom plugin loader
+│   ├── plugin_manager.zsh   # Custom plugin loader
+│   ├── zsh-init.zsh         # General init (aliases, exports, functions)
+│   ├── zsh-fuzzy.zsh        # fzf + zoxide integration
+│   ├── keybinds.zsh         # Key bindings
+│   └── init-profiler.zsh    # Boot profiling
 ├── plugins/                  # Zsh plugins (gitignored, auto-loaded)
 │   ├── zsh-autosuggestions/
 │   ├── zsh-syntax-highlighting/
 │   └── ...
 ├── prompt/                   # Prompt system (submodule)
-│   ├── prompt-init.zsh
-│   ├── prompt-git-status.zsh
-│   ├── prompt-utils.zsh
-│   └── README.md
+├── utils/                    # Utility scripts
+│   ├── zsh-bootlog-handler  # Boot logging framework
+│   ├── history-toggle       # Shared/private history mode
+│   └── zshlog               # General logging utility
 └── logs/                     # Shell logs (gitignored)
 ```
 
@@ -58,16 +69,36 @@ zsh/
 
 ### 1. 🔧 Modular Loading System
 
-Files are loaded in this order via `.zshrc`:
+The startup follows ZDOTDIR bootstrap pattern. On macOS, the full chain is:
 
+```
+Phase 0: /etc/zshenv (system-wide, custom — sets HOMEBREW_PREFIX, path_helper)
+Phase 1: ~/.zshenv → my.zshenv    # ZDOTDIR, XDG dirs, locale
+Phase 2: /etc/zprofile            # macOS path_helper (reads /etc/paths.d/*)
+Phase 3: ~/.zprofile → lib/.zprofile  # brew shellenv (login shells only)
+Phase 4: /etc/zshrc               # macOS system defaults
+Phase 5: ~/.zshrc (via ZDOTDIR)   # Main config — 12-phase bootstrap:
+  ├── env.zsh                     # PATH reset, brew shellenv, history, editor
+  ├── env/010-windows.zsh..999    # Modular env files (WSL, workspace, PATH, aliases)
+  ├── zsh-optionrc                # Zsh options
+  ├── lib/keybinds.zsh            # Key bindings
+  ├── lib/plugin_manager.zsh      # Plugin loader (zsh-autosuggestions, etc.)
+  ├── lib/zsh-init.zsh            # Aliases, exports, functions, completions
+  ├── lib/zsh-fuzzy.zsh           # fzf + zoxide
+  ├── completions.zsh             # Completion system
+  ├── utils/history-toggle        # Shared/private history mode
+  ├── .zshrc.local                # Machine-specific overrides (gitignored)
+  └── completions/openclaw.zsh    # OpenClaw completions
+```
+
+**Key insight**: `env.zsh` resets PATH to a known base (line 23), then builds it up
+layer by layer. This prevents PATH duplication from accumulated parent-process
+environment — each fresh shell gets a clean, predictable PATH regardless of
+what the parent shell had set.
+
+To trace the actual loading sequence on your machine:
 ```zsh
-1. env.zsh                 # ZDOTDIR, PATH setup
-2. my.zshenv               # User environment variables
-3. lib/*.zsh               # Core functions
-4. aliases, exports, etc.  # User customizations
-5. plugins/                # Zsh plugins
-6. prompt/                 # Prompt system
-7. completions/            # Completion system
+zsh -il -x -c 'echo done' 2>&1 | grep -E "\.(zshrc|zshenv|zprofile)" | head -10
 ```
 
 ### 2. 🎨 Git-Aware Prompt
@@ -272,6 +303,22 @@ rm ~/.config/zsh/.zcompdump*
 compinit
 ```
 
+### `~/.zshrc` Not Found at Home?
+
+This is **normal** when ZDOTDIR is in use. The real config lives at
+`$ZDOTDIR/.zshrc` (`~/.config/zsh/.zshrc`). A stale `~/.zshrc` at `$HOME` is
+never read — zsh reads from `$ZDOTDIR/.zshrc` instead.
+
+Confirm your ZDOTDIR is set correctly:
+```zsh
+echo $ZDOTDIR        # Should show ~/.config/zsh
+```
+
+Test that the right file loads:
+```zsh
+zsh -i -c 'echo $ZUTILS'   # Should show ~/.config/zsh/utils
+```
+
 ### Git Functions Not Found?
 ```bash
 # Check PATH includes git-utils
@@ -300,5 +347,5 @@ Part of personal dotfiles configuration. Use freely, modify as needed.
 
 ---
 
-**Last Updated:** 2025-10-05
+**Last Updated:** 2026-06-09
 **Maintained by:** [@smnuman](https://github.com/smnuman)
