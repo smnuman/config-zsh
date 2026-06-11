@@ -91,8 +91,8 @@ alias hg='history 1 | grep --color=never ' # Search full history for a specific 
 alias cat='bat --paging=never'            # Use bat instead of cat
 alias mdcd='function _mkcd(){ mkdir -p "$1" && cd "$1"; }; _mkcd'
 # https://www.cyberciti.biz/tips/bash-aliases-mac-centos-linux-unix.html#comment-21984
-alias ps2=’ps -ef | grep -v $$ | grep -i ‘  # Search for processes excluding the current one: I always create a ps2 command that I can easily pass a string to and look for it in the process table. I even have it remove the grep of the current line.
-alias del='rm -I –preserve_root'        # Interactive delete with confirmation: I alias rm to rm -i but sometimes I want a more interactive prompt. So I created a del command that uses rm -I which prompts once if you are deleting more than three files or recursively.
+alias ps2='ps -ef | grep -v $$ | grep -i '  # Search for processes excluding the current one: I always create a ps2 command that I can easily pass a string to and look for it in the process table. I even have it remove the grep of the current line.
+alias del='rm -I --preserve_root'        # Interactive delete with confirmation: I alias rm to rm -i but sometimes I want a more interactive prompt. So I created a del command that uses rm -I which prompts once if you are deleting more than three files or recursively.
 # ======================= NETWORK management functions =======================
 alias usage='ip -s link'
 # [disabled on Linux] alias connections='sudo lsof -n -P -i +c 15'
