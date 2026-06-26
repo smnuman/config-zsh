@@ -1,11 +1,13 @@
 # ===== Safe PATH handling =====
 
-path_add() {
-  case ":$PATH:" in
-    *":$1:"*) ;;
-    *) PATH="$PATH:$1" ;; # && echo "path added: '$1'";;
-  esac
-}
+# path_add() {
+#     [[ -d "$1" ]] || return
+
+#     case ":$PATH:" in
+#         *":$1:"*) ;;
+#         *) PATH="$1:$PATH" ;;
+#     esac
+# }
 
 # ===== Add paths below =====
 
@@ -17,10 +19,12 @@ path_add "$HOME/bin"
 path_add "$HOME/.cargo/bin"
 
 # Windows CLI tools (optional but safe)
-path_add "$WIN_ROOT"
-path_add "$WIN_ROOT/System32"
-path_add "$WIN_ROOT/System32/WindowsPowerShell/v1.0"
-path_add "$VSCODE_PATH"
+if [[ "$PLATFORM" == "wsl" ]]; then
+    path_add "$WIN_ROOT"
+    path_add "$WIN_ROOT/System32"
+    path_add "$WIN_ROOT/System32/WindowsPowerShell/v1.0"
+fi
+# path_add "$VSCODE_PATH"
 # path_add "/mnt/c/Users/smnum/AppData/Local/Programs/Microsoft VS Code/bin"
 
 # ===== export the path now =====

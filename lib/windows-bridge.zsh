@@ -20,8 +20,8 @@ win_home() {
 # ---- VS Code (WSL-native recommended) ----
 win_code() {
   # prefer WSL native VS Code integration
-  if command -v $VSCODE_PATH/code >/dev/null 2>&1; then
-    $VSCODE_PATH/code "${1:-.}"
+  if command -v $VSCODE_BIN/code >/dev/null 2>&1; then
+    $VSCODE_BIN/code "${1:-.}"
   else
     echo "❌ VS Code CLI not installed in WSL"
   fi

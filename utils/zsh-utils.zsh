@@ -1,4 +1,11 @@
 #!/usr/bin/env zsh
+
+rgz() {
+    rg "$@" | sed "s|$HOME|~|g"
+}
+
+
+
 # search and display aliases matching a pattern
 # usage: laa [pattern] [width]
 # example: laa g 20
