@@ -6,6 +6,15 @@
 # Clean start - empty previous session path logs (keep file for consistency)
 [[ -f "$ZLOGDIR/pathlog.zlog" ]] && : > "$ZLOGDIR/pathlog.zlog"
 
+# path_add() {
+#     [[ -d "$1" ]] || return
+
+#     case ":$PATH:" in
+#         *":$1:"*) ;;
+#         *) PATH="$1:$PATH" ;;
+#     esac
+# }
+
 # Usage e.g.: export_path "$HOME/.cargo/bin"
 export_path() {
     local dir="$1" dirprint dirlength=0 sender
